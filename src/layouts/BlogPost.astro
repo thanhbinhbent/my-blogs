@@ -7,7 +7,7 @@ import FormattedDate from '../components/FormattedDate.astro';
 import GiscusComments from '../components/GiscusComments.astro';
 import Header from '../components/Header.astro';
 import TableOfContents from '../components/TableOfContents.astro';
-import { getLangFromUrl, getLocalePath, useTranslations } from '../i18n/utils';
+import { getLangFromUrl, getLocalePath, useTranslations, withBase } from '../i18n/utils';
 
 type Props = CollectionEntry<'blog'>['data'] & {
   headings?: { depth: number; slug: string; text: string }[];
@@ -54,7 +54,7 @@ const t = useTranslations(lang);
           <header class="art-header">
             {tags.length > 0 && (
               <div class="tag-row">
-                {tags.map((t) => <a href={`/tags/${t}/`} class="tag-pill">{t}</a>)}
+                {tags.map((t) => <a href={withBase(`/tags/${t}/`)} class="tag-pill">{t}</a>)}
               </div>
             )}
             <h1 class="art-title">{title}</h1>
@@ -84,7 +84,7 @@ const t = useTranslations(lang);
             {tags.length > 0 && (
               <div class="art-tags">
                 <span class="art-tags-label">{t('post.topics')}</span>
-                {tags.map((t) => <a href={`/tags/${t}/`} class="tag-pill">{t}</a>)}
+                {tags.map((t) => <a href={withBase(`/tags/${t}/`)} class="tag-pill">{t}</a>)}
               </div>
             )}
             <a href={getLocalePath('/post', lang)} class="back-btn">

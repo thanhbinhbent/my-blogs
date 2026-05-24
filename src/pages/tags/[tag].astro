@@ -5,7 +5,7 @@ import Footer from '../../components/Footer.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
 import Header from '../../components/Header.astro';
 import { SITE_TITLE } from '../../consts';
-import { useTranslations } from '../../i18n/utils';
+import { useTranslations, withBase } from '../../i18n/utils';
 import LangFlag from '../../components/LangFlag.astro';
 
 const t = useTranslations('en');
@@ -35,7 +35,7 @@ const { tag, posts } = Astro.props;
 
 function postHref(post: (typeof posts)[number]) {
   const slug = post.data.slug ?? post.id;
-  return post.data.lang === 'en' ? `/post/${slug}/` : `/vi/post/${slug}/`;
+  return post.data.lang === 'en' ? withBase(`/post/${slug}/`) : withBase(`/vi/post/${slug}/`);
 }
 ---
 
@@ -49,7 +49,7 @@ function postHref(post: (typeof posts)[number]) {
     <main>
       <div class="container">
         <header class="page-hd">
-          <a href="/tags" class="back">{t('tags.back')}</a>
+          <a href={withBase('/tags')} class="back">{t('tags.back')}</a>
           <h1>#{tag}</h1>
           <p class="page-hd-sub">{t('tags.post.count')(posts.length)}</p>
         </header>

@@ -4,7 +4,7 @@ import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
 import Header from '../../components/Header.astro';
 import { SITE_TITLE } from '../../consts';
-import { useTranslations } from '../../i18n/utils';
+import { useTranslations, withBase } from '../../i18n/utils';
 
 const t = useTranslations('en');
 const all = await getCollection('blog', ({ data }) => !data.draft);
@@ -38,7 +38,7 @@ const tags = [...map.entries()].sort((a,b) => b[1]-a[1]).map(([tag,count]) => ({
         <ul class="tag-grid">
           {tags.map(({ tag, count }) => (
             <li>
-              <a href={`/tags/${tag}/`} class="tag-card">
+              <a href={withBase(`/tags/${tag}/`)} class="tag-card">
                 <span class="tag-name">#{tag}</span>
                 <span class="tag-count">{count}</span>
               </a>

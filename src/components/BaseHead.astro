@@ -76,18 +76,20 @@ const jsonLd = isArticle ? JSON.stringify({
 </script>
 
 <!-- Language auto-detect: redirect once if user has never chosen manually -->
-<script is:inline>
+<script is:inline define:vars={{ BASE_URL: import.meta.env.BASE_URL }}>
   (function () {
     try {
       if (localStorage.getItem('lang-pref')) return;
-      var path = window.location.pathname;
+      var base = BASE_URL.replace(/\/$/, '');
+      var full = window.location.pathname;
+      var path = base && full.startsWith(base) ? full.slice(base.length) || '/' : full;
       var isVI = path === '/vi' || path.startsWith('/vi/');
       var lang = (navigator.languages && navigator.languages[0]) || navigator.language || 'en';
       var prefersVI = lang.toLowerCase().startsWith('vi');
       if (prefersVI && !isVI) {
-        window.location.replace('/vi' + (path === '/' ? '' : path));
+        window.location.replace(base + '/vi' + (path === '/' ? '' : path));
       } else if (!prefersVI && isVI) {
-        window.location.replace(path.replace(/^\/vi/, '') || '/');
+        window.location.replace(base + (path.replace(/^\/vi/, '') || '/'));
       }
     } catch (e) {}
   })();

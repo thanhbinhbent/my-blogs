@@ -1,7 +1,17 @@
 import { defaultLang, ui, type Lang, type UiKey } from './ui';
 
+function base(): string {
+  return (import.meta.env.BASE_URL ?? '/').replace(/\/$/, '');
+}
+
+export function withBase(path: string): string {
+  return base() + path;
+}
+
 export function getLangFromUrl(url: URL): Lang {
-  const [, first] = url.pathname.split('/');
+  const b = base();
+  const path = b && url.pathname.startsWith(b) ? url.pathname.slice(b.length) || '/' : url.pathname;
+  const [, first] = path.split('/');
   if (first === 'vi') return 'vi';
   return defaultLang;
 }
@@ -13,9 +23,9 @@ export function useTranslations(lang: Lang) {
 }
 
 export function getLocalePath(path: string, lang: Lang): string {
-  if (lang === 'en') return path;
+  if (lang === 'en') return withBase(path);
   const clean = path === '/' ? '' : path;
-  return `/vi${clean}`;
+  return withBase(`/vi${clean}`);
 }
 
 export function getAlternateLang(lang: Lang): Lang {
@@ -23,10 +33,10 @@ export function getAlternateLang(lang: Lang): Lang {
 }
 
 export function getAlternatePath(currentPath: string, lang: Lang): string {
+  const b = base();
+  const path = b && currentPath.startsWith(b) ? currentPath.slice(b.length) || '/' : currentPath;
   if (lang === 'vi') {
-    // currently on EN → switch to VI
-    return `/vi${currentPath === '/' ? '' : currentPath}`;
+    return withBase('/vi' + (path === '/' ? '' : path));
   }
-  // currently on VI → strip /vi prefix
-  return currentPath.replace(/^\/vi/, '') || '/';
+  return withBase(path.replace(/^\/vi/, '') || '/');
 }

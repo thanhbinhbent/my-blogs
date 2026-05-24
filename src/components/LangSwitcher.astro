@@ -49,8 +49,7 @@ const viHref = lang === 'en' ? getAlternatePath(path, 'vi') : path;
 <script>
   document.querySelectorAll<HTMLAnchorElement>('.ls-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const href = btn.getAttribute('href') ?? '';
-      localStorage.setItem('lang-pref', href.startsWith('/vi') ? 'vi' : 'en');
+      localStorage.setItem('lang-pref', btn.getAttribute('lang') ?? 'en');
     });
   });
 </script>
