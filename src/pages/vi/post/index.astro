@@ -1,0 +1,95 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../../components/BaseHead.astro';
+import Footer from '../../../components/Footer.astro';
+import FormattedDate from '../../../components/FormattedDate.astro';
+import Header from '../../../components/Header.astro';
+import { SITE_TITLE } from '../../../consts';
+import { useTranslations } from '../../../i18n/utils';
+import LangFlag from '../../../components/LangFlag.astro';
+
+const t = useTranslations('vi');
+const all = await getCollection('blog', ({ data }) => !data.draft);
+const viPosts = all.filter(p => p.data.lang === 'vi');
+const viSlugs = new Set(viPosts.map(p => p.data.slug ?? p.id));
+const posts = [
+  ...viPosts,
+  ...all.filter(p => p.data.lang === 'en' && !viSlugs.has(p.data.slug ?? p.id)),
+].sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+function postHref(post: (typeof all)[number]) {
+  const slug = post.data.slug ?? post.id;
+  return post.data.lang === 'vi' ? `/vi/post/${slug}/` : `/post/${slug}/`;
+}
+---
+
+<!doctype html>
+<html lang="vi">
+  <head>
+    <BaseHead title={`${t('post.title')} · ${SITE_TITLE}`} description="Tất cả bài viết về phát triển web, AI và kiểm thử." />
+  </head>
+  <body>
+    <Header />
+    <main>
+      <div class="container">
+        <header class="page-hd">
+          <h1>{t('post.title')}</h1>
+          <p class="page-hd-sub">{t('post.count')(posts.length)}</p>
+        </header>
+
+        {posts.length > 0 ? (
+          <ul class="posts">
+            {posts.map((post) => (
+              <li class="row">
+                <a href={postHref(post)} class="row-link">
+                  <div class="row-body">
+                    <div class="row-meta">
+                      <time datetime={post.data.date.toISOString()}>
+                        <FormattedDate date={post.data.date} />
+                      </time>
+                      {post.data.lang === 'en' && <LangFlag lang="en" />}
+                      {post.data.tags?.slice(0,3).map((tag) => (
+                        <span class="tag-pill">{tag}</span>
+                      ))}
+                    </div>
+                    <h2 class="row-title">{post.data.title}</h2>
+                    <p class="row-desc">{post.data.description}</p>
+                  </div>
+                  <div class="row-arrow" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                  </div>
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="no-posts">Chưa có bài viết.</p>
+        )}
+      </div>
+    </main>
+    <Footer />
+  </body>
+</html>
+
+<style>
+.page-hd { padding: 3rem 0 2rem; border-bottom: 1px solid var(--bd); margin-bottom: 0; }
+.page-hd h1 { font-size: clamp(2rem, 5vw, 2.75rem); letter-spacing: -.04em; margin-bottom: .375rem; }
+.page-hd-sub { font-size: .875rem; color: var(--fg-3); margin: 0; }
+.posts { list-style: none; }
+.row { border-bottom: 1px solid var(--bd); }
+.row-link { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.5rem 0; text-decoration: none; color: inherit; }
+.row-body { flex: 1; min-width: 0; }
+.row-meta { display: flex; align-items: center; gap: .5rem; margin-bottom: .375rem; flex-wrap: wrap; }
+.row-meta time { font-size: .75rem; color: var(--fg-3); }
+.tag-pill { font-size: .65rem; font-weight: 600; letter-spacing: .03em; color: var(--clr-accent); background: color-mix(in srgb, var(--clr-accent) 10%, transparent); padding: .15em .55em; border-radius: 99px; white-space: nowrap; }.row-title { font-size: 1.0625rem; font-weight: 700; letter-spacing: -.02em; color: var(--fg); margin-bottom: .3rem; transition: color .15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-link:hover .row-title { color: var(--clr-accent); }
+.row-desc { font-size: .875rem; color: var(--fg-2); line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65ch; }
+.row-arrow { color: var(--fg-3); flex-shrink: 0; transition: transform .15s, color .15s; }
+.row-link:hover .row-arrow { color: var(--clr-accent); transform: translateX(3px); }
+.no-posts { padding: 3rem 0; color: var(--fg-2); }
+.no-posts a { color: var(--clr-accent); }
+@media (max-width: 480px) {
+  .row-title, .row-desc { white-space: normal; overflow: visible; text-overflow: clip; }
+  .row-arrow { display: none; }
+}
+</style>

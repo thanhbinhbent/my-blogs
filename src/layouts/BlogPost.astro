@@ -1,0 +1,273 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+import GiscusComments from '../components/GiscusComments.astro';
+import Header from '../components/Header.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import { getLangFromUrl, getLocalePath, useTranslations } from '../i18n/utils';
+
+type Props = CollectionEntry<'blog'>['data'] & {
+  headings?: { depth: number; slug: string; text: string }[];
+};
+
+const { title, description, date, updatedDate, coverImage, tags = [], canonicalURL, ogImage, headings = [] } = Astro.props;
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<html lang="en">
+  <head>
+    <BaseHead
+      title={title}
+      description={description}
+      image={typeof coverImage === 'object' && coverImage !== null && 'src' in coverImage ? coverImage : undefined}
+      ogImage={typeof ogImage === 'object' && ogImage !== null && 'src' in ogImage ? ogImage : (typeof ogImage === 'string' ? ogImage : undefined)}
+      canonicalURL={canonicalURL}
+      pubDate={date}
+      updatedDate={updatedDate}
+      tags={tags}
+      isArticle={true}
+    />
+  </head>
+
+  <body>
+    <div class="progress" id="reading-progress" aria-hidden="true"></div>
+    <Header />
+
+    <div class="page-wrap">
+      <div class="container article-grid">
+
+        <!-- ── Article ── -->
+        <article class="article">
+          {coverImage && (
+            <div class="cover">
+              {typeof coverImage === 'string'
+                ? <img src={coverImage} alt={title} width={1200} height={630} loading="eager" class="cover-img" />
+                : <Image width={1200} height={630} src={coverImage} alt={title} loading="eager" class="cover-img" />
+              }
+            </div>
+          )}
+
+          <header class="art-header">
+            {tags.length > 0 && (
+              <div class="tag-row">
+                {tags.map((t) => <a href={`/tags/${t}/`} class="tag-pill">{t}</a>)}
+              </div>
+            )}
+            <h1 class="art-title">{title}</h1>
+            <p class="art-desc">{description}</p>
+            <div class="art-meta">
+              <time datetime={date.toISOString()}>
+                <FormattedDate date={date} />
+              </time>
+              {updatedDate && (
+                <span class="meta-sep">·</span>
+                <span class="updated-label">{t('post.updated')} <FormattedDate date={updatedDate} /></span>
+              )}
+            </div>
+          </header>
+
+          <hr />
+
+          <div class="toc-inline">
+            <TableOfContents headings={headings} />
+          </div>
+
+          <div class="prose">
+            <slot />
+          </div>
+
+          <footer class="art-footer">
+            {tags.length > 0 && (
+              <div class="art-tags">
+                <span class="art-tags-label">{t('post.topics')}</span>
+                {tags.map((t) => <a href={`/tags/${t}/`} class="tag-pill">{t}</a>)}
+              </div>
+            )}
+            <a href={getLocalePath('/post', lang)} class="back-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+              {t('post.back')}
+            </a>
+          </footer>
+
+          <GiscusComments />
+        </article>
+
+        <!-- ── Sidebar ── -->
+        <aside class="sidebar">
+          <div class="sidebar-sticky">
+            <TableOfContents headings={headings} />
+          </div>
+        </aside>
+
+      </div>
+    </div>
+
+    <Footer />
+  </body>
+</html>
+
+<style>
+/* Progress bar */
+.progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  width: 0%;
+  background: linear-gradient(90deg, var(--clr-accent), var(--clr-accent-2));
+  z-index: 200;
+  transition: width .08s linear;
+}
+
+/* Layout */
+.page-wrap { padding: 2.5rem 0 0; }
+
+.article-grid {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 4rem;
+  align-items: start;
+}
+
+/* Cover */
+.cover {
+  margin-bottom: 2.5rem;
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  box-shadow: var(--sh-xl);
+}
+
+.cover-img {
+  width: 100%;
+  aspect-ratio: 2/1;
+  object-fit: cover;
+  border-radius: 0;
+  display: block;
+}
+
+/* Article header */
+.art-header { margin-bottom: 1.5rem; }
+
+.tag-row { display: flex; flex-wrap: wrap; gap: .375rem; margin-bottom: .875rem; }
+
+.tag-pill {
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .03em;
+  color: var(--clr-accent);
+  background: color-mix(in srgb, var(--clr-accent) 10%, transparent);
+  padding: .2em .65em;
+  border-radius: 99px;
+  text-decoration: none;
+  transition: background .12s;
+  white-space: nowrap;
+}
+
+.tag-pill:hover { background: color-mix(in srgb, var(--clr-accent) 18%, transparent); color: var(--clr-accent); }
+
+.art-title {
+  font-size: clamp(1.75rem, 4vw, 2.625rem);
+  letter-spacing: -.04em;
+  line-height: 1.15;
+  color: var(--fg);
+  margin-bottom: .875rem;
+}
+
+.art-desc {
+  font-size: 1.125rem;
+  color: var(--fg-2);
+  line-height: 1.65;
+  margin-bottom: 1rem;
+}
+
+.art-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .5rem;
+  font-size: .8125rem;
+  color: var(--fg-3);
+}
+
+.meta-sep { color: var(--fg-3); }
+.updated-label { font-style: italic; }
+
+/* Inline TOC (mobile only) */
+.toc-inline { display: none; margin-bottom: 2rem; }
+
+/* Article footer */
+.art-footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--bd);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.art-tags { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem; }
+
+.art-tags-label {
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--fg-3);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-right: .25rem;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .375rem;
+  font-size: .875rem;
+  font-weight: 500;
+  color: var(--fg-2);
+  padding: .5rem .875rem;
+  border: 1px solid var(--bd);
+  border-radius: var(--r-md);
+  transition: border-color .15s, background .15s, color .15s;
+}
+
+.back-btn:hover { border-color: var(--bd-1); background: var(--bg-1); color: var(--fg); }
+
+/* Sidebar */
+.sidebar-sticky {
+  position: sticky;
+  top: calc(var(--nav-h) + 1.5rem);
+  max-height: calc(100vh - var(--nav-h) - 3rem);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.sidebar-sticky::-webkit-scrollbar { display: none; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .article-grid { grid-template-columns: 1fr; gap: 0; }
+  .sidebar { display: none; }
+  .toc-inline { display: block; }
+}
+
+@media (max-width: 600px) {
+  .page-wrap { padding: 1.5rem 0 0; }
+  .art-title { font-size: 1.75rem; }
+  .art-desc  { font-size: 1rem; }
+}
+</style>
+
+<script>
+  const bar = document.getElementById('reading-progress');
+  if (bar) {
+    const update = () => {
+      const h = document.documentElement;
+      const pct = h.scrollTop / (h.scrollHeight - h.clientHeight);
+      bar.style.width = isFinite(pct) ? `${pct * 100}%` : '0%';
+    };
+    window.addEventListener('scroll', update, { passive: true });
+  }
+</script>

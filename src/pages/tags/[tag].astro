@@ -1,0 +1,96 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import Header from '../../components/Header.astro';
+import { SITE_TITLE } from '../../consts';
+import { useTranslations } from '../../i18n/utils';
+import LangFlag from '../../components/LangFlag.astro';
+
+const t = useTranslations('en');
+
+export async function getStaticPaths() {
+  const all = await getCollection('blog', ({ data }) => !data.draft);
+  const enPosts = all.filter(p => p.data.lang === 'en');
+  const enSlugs = new Set(enPosts.map(p => p.data.slug ?? p.id));
+  const posts = [
+    ...enPosts,
+    ...all.filter(p => p.data.lang === 'vi' && !enSlugs.has(p.data.slug ?? p.id)),
+  ];
+  const tags = new Set<string>();
+  for (const p of posts) for (const tag of p.data.tags ?? []) tags.add(tag);
+  return [...tags].map((tag) => ({
+    params: { tag },
+    props: {
+      tag,
+      posts: posts
+        .filter((p) => p.data.tags?.includes(tag))
+        .sort((a,b) => b.data.date.valueOf() - a.data.date.valueOf()),
+    },
+  }));
+}
+
+const { tag, posts } = Astro.props;
+
+function postHref(post: (typeof posts)[number]) {
+  const slug = post.data.slug ?? post.id;
+  return post.data.lang === 'en' ? `/post/${slug}/` : `/vi/post/${slug}/`;
+}
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={`#${tag} · ${SITE_TITLE}`} description={`All posts tagged with ${tag}.`} />
+  </head>
+  <body>
+    <Header />
+    <main>
+      <div class="container">
+        <header class="page-hd">
+          <a href="/tags" class="back">{t('tags.back')}</a>
+          <h1>#{tag}</h1>
+          <p class="page-hd-sub">{t('tags.post.count')(posts.length)}</p>
+        </header>
+        <ul class="posts">
+          {posts.map((post) => (
+            <li class="row">
+              <a href={postHref(post)} class="row-link">
+                <div>
+                  <div class="row-meta">
+                    <time class="row-date" datetime={post.data.date.toISOString()}>
+                      <FormattedDate date={post.data.date} />
+                    </time>
+                    {post.data.lang === 'vi' && <LangFlag lang="vi" />}
+                  </div>
+                  <h2 class="row-title">{post.data.title}</h2>
+                  <p class="row-desc">{post.data.description}</p>
+                </div>
+                <svg class="row-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </main>
+    <Footer />
+  </body>
+</html>
+
+<style>
+.page-hd { padding: 3rem 0 2rem; border-bottom: 1px solid var(--bd); margin-bottom: 0; }
+.back { font-size:.8125rem; color:var(--clr-accent); display:inline-block; margin-bottom:.75rem; }
+.back:hover { color:var(--clr-accent-2); }
+.page-hd h1 { font-size:clamp(2rem,5vw,2.75rem); letter-spacing:-.04em; margin-bottom:.375rem; }
+.page-hd-sub { font-size:.875rem; color:var(--fg-3); margin:0; }
+.posts { list-style:none; }
+.row { border-bottom:1px solid var(--bd); }
+.row-link { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1.25rem 0; text-decoration:none; color:inherit; }
+.row-meta { display:flex; align-items:center; gap:.5rem; margin-bottom:.3rem; flex-wrap:wrap; }
+.row-date { font-size:.75rem; color:var(--fg-3); }.row-title { font-size:1.0625rem; font-weight:700; letter-spacing:-.02em; color:var(--fg); margin-bottom:.25rem; transition:color .15s; }
+.row-link:hover .row-title { color:var(--clr-accent); }
+.row-desc { font-size:.875rem; color:var(--fg-2); line-height:1.5; }
+.row-arrow { color:var(--fg-3); flex-shrink:0; transition:transform .15s, color .15s; }
+.row-link:hover .row-arrow { color:var(--clr-accent); transform:translateX(3px); }
+</style>

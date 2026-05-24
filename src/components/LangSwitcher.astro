@@ -1,0 +1,56 @@
+---
+import { getAlternatePath } from '../i18n/utils';
+
+const lang = (Astro.currentLocale ?? 'en') as 'en' | 'vi';
+const path = Astro.url.pathname;
+
+const enHref = lang === 'vi' ? getAlternatePath(path, 'en') : path;
+const viHref = lang === 'en' ? getAlternatePath(path, 'vi') : path;
+---
+
+<div class="lang-sw" role="navigation" aria-label="Language switcher">
+  <a href={enHref} class:list={['ls-btn', { active: lang === 'en' }]} lang="en" aria-current={lang === 'en' ? 'true' : undefined}>EN</a>
+  <span class="ls-sep" aria-hidden="true">|</span>
+  <a href={viHref} class:list={['ls-btn', { active: lang === 'vi' }]} lang="vi" aria-current={lang === 'vi' ? 'true' : undefined}>VI</a>
+</div>
+
+<style>
+.lang-sw {
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+  padding: .2rem .3rem;
+  border: 1px solid var(--bd);
+  border-radius: var(--r-md);
+  background: var(--bg-1);
+}
+
+.ls-sep {
+  font-size: .7rem;
+  color: var(--bd-1);
+}
+
+.ls-btn {
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--fg-3);
+  padding: .2rem .35rem;
+  border-radius: 5px;
+  transition: color .12s, background .12s;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.ls-btn:hover { color: var(--fg); background: var(--bg-2); }
+.ls-btn.active { color: var(--clr-accent); background: color-mix(in srgb, var(--clr-accent) 12%, transparent); }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLAnchorElement>('.ls-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const href = btn.getAttribute('href') ?? '';
+      localStorage.setItem('lang-pref', href.startsWith('/vi') ? 'vi' : 'en');
+    });
+  });
+</script>

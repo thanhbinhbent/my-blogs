@@ -1,0 +1,146 @@
+---
+import { getLangFromUrl, getLocalePath, useTranslations } from '../i18n/utils';
+import { AUTHOR, GITHUB_USERNAME, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div class="footer-left">
+      <a href={getLocalePath('/', lang)} class="footer-brand">{SITE_TITLE}</a>
+      <p class="footer-desc">{SITE_DESCRIPTION}</p>
+      <div class="footer-socials">
+        <a href={`https://github.com/${GITHUB_USERNAME}`} target="_blank" rel="noopener noreferrer" class="social-btn" aria-label="GitHub">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        </a>
+        <a href="/rss.xml" class="social-btn" aria-label="RSS" title="RSS Feed">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19.01 7.38 20 6.18 20C4.98 20 4 19.01 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="footer-cols">
+      <div class="footer-col">
+        <p class="col-label">{t('footer.nav')}</p>
+        <a href={getLocalePath('/', lang)}>Home</a>
+        <a href={getLocalePath('/post', lang)}>{t('footer.blog')}</a>
+        <a href={getLocalePath('/tags', lang)}>{t('nav.topics')}</a>
+        <a href={getLocalePath('/about', lang)}>{t('nav.about')}</a>
+      </div>
+      <div class="footer-col">
+        <p class="col-label">{t('footer.resources')}</p>
+        <a href="/rss.xml">RSS Feed</a>
+        <a href="/sitemap-index.xml">Sitemap</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bar">
+    <div class="container footer-bar-inner">
+      <span>&copy; {year} {AUTHOR}.</span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--bd);
+    background: var(--bg-1);
+    margin-top: 6rem;
+  }
+
+  .footer-inner {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 3rem;
+    padding-top: 3rem;
+    padding-bottom: 2.5rem;
+  }
+
+  /* Left */
+  .footer-left { max-width: 260px; }
+
+  .footer-brand {
+    display: inline-block;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--fg);
+    letter-spacing: -.025em;
+    margin-bottom: .625rem;
+  }
+
+  .footer-brand:hover { color: var(--clr-accent); }
+
+  .footer-desc {
+    font-size: .8125rem;
+    color: var(--fg-2);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .footer-socials { display: flex; gap: .5rem; }
+
+  .social-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--bd);
+    border-radius: var(--r-md);
+    color: var(--fg-2);
+    transition: border-color .15s, color .15s, background .15s;
+  }
+
+  .social-btn:hover {
+    border-color: var(--clr-accent);
+    color: var(--clr-accent);
+    background: color-mix(in srgb, var(--clr-accent) 8%, transparent);
+  }
+
+  /* Columns */
+  .footer-cols { display: flex; gap: 2.5rem; align-items: start; }
+
+  .footer-col {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    min-width: 100px;
+  }
+
+  .col-label {
+    font-size: .6875rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+    margin-bottom: .25rem;
+  }
+
+  .footer-col a {
+    font-size: .875rem;
+    color: var(--fg-2);
+    transition: color .15s;
+  }
+
+  .footer-col a:hover { color: var(--fg); }
+
+  /* Bar */
+  .footer-bar {
+    border-top: 1px solid var(--bd);
+    font-size: .75rem;
+    color: var(--fg-3);
+  }
+
+  .footer-bar-inner { padding-top: .875rem; padding-bottom: .875rem; }
+
+  .footer-bar a { color: var(--fg-2); }
+  .footer-bar a:hover { color: var(--fg); }
+
+  @media (max-width: 640px) {
+    .footer-inner { grid-template-columns: 1fr; gap: 2rem; }
+    .footer-left  { max-width: 100%; }
+    .footer-cols  { gap: 2rem; }
+  }
+</style>

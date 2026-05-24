@@ -1,0 +1,30 @@
+---
+const { lang } = Astro.props as { lang: 'en' | 'vi' };
+---
+{lang === 'vi' ? (
+  <svg class="flag" width="20" height="14" viewBox="0 0 20 14" xmlns="http://www.w3.org/2000/svg" aria-label="Tiếng Việt">
+    <rect width="20" height="14" rx="2" fill="#DA251D"/>
+    <polygon points="10,2.2 11.3,6.1 15.5,6.1 12.2,8.5 13.5,12.4 10,10 6.5,12.4 7.8,8.5 4.5,6.1 8.7,6.1" fill="#FFCD00"/>
+  </svg>
+) : (
+  <svg class="flag" width="20" height="14" viewBox="0 0 20 14" xmlns="http://www.w3.org/2000/svg" aria-label="English">
+    <rect width="20" height="14" rx="2" fill="#B22234"/>
+    <rect y="1.08" width="20" height="1.08" fill="white"/>
+    <rect y="3.23" width="20" height="1.08" fill="white"/>
+    <rect y="5.38" width="20" height="1.08" fill="white"/>
+    <rect y="7.54" width="20" height="1.08" fill="white"/>
+    <rect y="9.69" width="20" height="1.08" fill="white"/>
+    <rect y="11.85" width="20" height="1.08" fill="white"/>
+    <rect width="8" height="7.54" fill="#3C3B6E"/>
+  </svg>
+)}
+
+<style>
+.flag {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.18);
+}
+</style>

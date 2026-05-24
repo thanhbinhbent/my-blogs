@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm /d/MyRepositories/startup/my-blogs/src/content/blog/*.md /d/MyRepositories/startup/my-blogs/src/content/blog/*.mdx && ls /d/MyRepositories/startup/my-blogs/src/content/blog/)",
+      "PowerShell($env:Path = [System.Environment]::GetEnvironmentVariable\\('Path','Machine'\\) + ';' + [System.Environment]::GetEnvironmentVariable\\('Path','User'\\); Set-Location \"d:\\\\MyRepositories\\\\startup\\\\my-blogs\"; npm run build 2>&1)",
+      "Bash(curl -s http://localhost:4321)",
+      "Bash(curl -s http://localhost:4321/)",
+      "Bash(npm run *)"
+    ],
+    "additionalDirectories": [
+      "D:\\MyRepositories\\startup\\my-blogs\\src\\content\\blog"
+    ]
+  }
+}

@@ -1,0 +1,373 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+import Header from '../components/Header.astro';
+import { AUTHOR, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { useTranslations } from '../i18n/utils';
+import LangFlag from '../components/LangFlag.astro';
+
+const t = useTranslations('en');
+
+const all = await getCollection('blog', ({ data }) => !data.draft);
+const enPosts = all.filter(p => p.data.lang === 'en');
+const enSlugs = new Set(enPosts.map(p => p.data.slug ?? p.id));
+const posts = [
+  ...enPosts,
+  ...all.filter(p => p.data.lang === 'vi' && !enSlugs.has(p.data.slug ?? p.id)),
+].sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+function postHref(post: (typeof all)[number]) {
+  const slug = post.data.slug ?? post.id;
+  return post.data.lang === 'en' ? `/post/${slug}/` : `/vi/post/${slug}/`;
+}
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+  </head>
+  <body>
+    <Header />
+    <main>
+      <!-- ── Hero ───────────────────────────────── -->
+      <section class="hero">
+        <div class="container">
+          <div class="hero-inner">
+            <div class="hero-text">
+              <div class="hero-kicker">
+                <span class="kicker-dot"></span>
+                {t('hero.kicker')}
+              </div>
+              <h1 class="hero-headline">
+                Hi, I'm <span class="gradient-text">{AUTHOR}</span>
+              </h1>
+              <p class="hero-sub">{SITE_DESCRIPTION}</p>
+              <div class="hero-cta">
+                <a href="/post" class="cta-primary">
+                  {t('hero.read')}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+                <a href="/about" class="cta-ghost">{t('hero.about')}</a>
+              </div>
+            </div>
+            <div class="hero-badge-stack" aria-hidden="true">
+              <div class="badge-card">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--clr-accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                <span>{t('hero.badge.webdev')}</span>
+              </div>
+              <div class="badge-card">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--clr-accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+                <span>{t('hero.badge.ai')}</span>
+              </div>
+              <div class="badge-card">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--clr-accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                <span>{t('hero.badge.oss')}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Posts ──────────────────────────────── -->
+      {posts.length > 0 && (
+        <section class="posts-section">
+          <div class="container">
+            <div class="section-head">
+              <h2 class="section-title">{t('home.latest')}</h2>
+              <a href="/post" class="section-link">
+                {t('home.all')}
+              </a>
+            </div>
+            <ul class="post-list">
+              {posts.slice(0, 6).map((post) => (
+                <li class="post-row">
+                  <a href={postHref(post)} class="post-row-link">
+                    <div class="post-row-main">
+                      <div class="post-meta-top">
+                        <time datetime={post.data.date.toISOString()} class="post-date">
+                          <FormattedDate date={post.data.date} />
+                        </time>
+                        {post.data.lang === 'vi' && <LangFlag lang="vi" />}
+                        {post.data.tags?.slice(0,2).map((t) => (
+                          <span class="tag-pill">{t}</span>
+                        ))}
+                      </div>
+                      <h3 class="post-title">{post.data.title}</h3>
+                      <p class="post-desc">{post.data.description}</p>
+                    </div>
+                    <div class="post-row-arrow" aria-hidden="true">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </div>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+    </main>
+    <Footer />
+  </body>
+</html>
+
+<style>
+/* ── Hero ───────────────────────── */
+.hero {
+  padding: 5rem 0 4rem;
+  border-bottom: 1px solid var(--bd);
+}
+
+.hero-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3rem;
+}
+
+.hero-text { flex: 1; max-width: 540px; }
+
+.hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .8125rem;
+  font-weight: 600;
+  color: var(--clr-accent);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  margin-bottom: 1.25rem;
+}
+
+.kicker-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--clr-accent);
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%,100% { opacity:1; }
+  50%      { opacity:.35; }
+}
+
+.hero-headline {
+  font-size: clamp(2.25rem, 6vw, 3.25rem);
+  letter-spacing: -.04em;
+  line-height: 1.1;
+  color: var(--fg);
+  margin-bottom: 1.125rem;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--clr-accent) 0%, var(--clr-accent-2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  font-size: 1.0625rem;
+  color: var(--fg-2);
+  line-height: 1.7;
+  margin-bottom: 2rem;
+  max-width: 440px;
+}
+
+.hero-cta { display: flex; gap: .75rem; flex-wrap: wrap; align-items: center; }
+
+.cta-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  background: var(--clr-accent);
+  color: #fff;
+  font-size: .9375rem;
+  font-weight: 600;
+  padding: .625rem 1.375rem;
+  border-radius: var(--r-md);
+  transition: background .15s, transform .15s, box-shadow .15s;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--clr-accent) 35%, transparent);
+}
+
+.cta-primary:hover {
+  background: var(--clr-accent-2);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--clr-accent) 40%, transparent);
+}
+
+.cta-ghost {
+  display: inline-flex;
+  align-items: center;
+  font-size: .9375rem;
+  font-weight: 500;
+  color: var(--fg-2);
+  padding: .625rem 1.25rem;
+  border: 1px solid var(--bd);
+  border-radius: var(--r-md);
+  transition: border-color .15s, background .15s, color .15s;
+}
+
+.cta-ghost:hover {
+  border-color: var(--bd-1);
+  background: var(--bg-1);
+  color: var(--fg);
+}
+
+/* Badge cards */
+.hero-badge-stack {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  flex-shrink: 0;
+}
+
+.badge-card {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .875rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--bd);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-sm);
+  font-size: .875rem;
+  font-weight: 600;
+  color: var(--fg);
+  min-width: 170px;
+  transition: box-shadow .2s, transform .2s, border-color .2s;
+}
+
+.badge-card:hover {
+  box-shadow: var(--sh-md);
+  transform: translateY(-1px);
+  border-color: var(--bd-1);
+}
+
+/* ── Posts ──────────────────────── */
+.posts-section { padding: 3.5rem 0; }
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--fg);
+}
+
+.section-link {
+  font-size: .875rem;
+  font-weight: 500;
+  color: var(--clr-accent);
+}
+
+.section-link:hover { color: var(--clr-accent-2); }
+
+.post-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.post-row { border-bottom: 1px solid var(--bd); }
+.post-row:first-child { border-top: 1px solid var(--bd); }
+
+.post-row-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.375rem 0;
+  text-decoration: none;
+  color: inherit;
+  transition: none;
+}
+
+.post-row-main { flex: 1; min-width: 0; }
+
+.post-meta-top {
+  display: flex;
+  align-items: center;
+  gap: .625rem;
+  margin-bottom: .4rem;
+  flex-wrap: wrap;
+}
+
+.post-date {
+  font-size: .75rem;
+  color: var(--fg-3);
+}
+
+.tag-pill {
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .03em;
+  color: var(--clr-accent);
+  background: color-mix(in srgb, var(--clr-accent) 10%, transparent);
+  padding: .15em .55em;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.post-title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--fg);
+  margin-bottom: .3rem;
+  transition: color .15s;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.post-row-link:hover .post-title { color: var(--clr-accent); }
+
+.post-desc {
+  font-size: .875rem;
+  color: var(--fg-2);
+  line-height: 1.55;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70ch;
+}
+
+.post-row-arrow {
+  color: var(--fg-3);
+  flex-shrink: 0;
+  transform: translateX(0);
+  transition: transform .15s, color .15s;
+}
+
+.post-row-link:hover .post-row-arrow {
+  color: var(--clr-accent);
+  transform: translateX(3px);
+}
+
+/* ── Responsive ─────────────────── */
+@media (max-width: 768px) {
+  .hero { padding: 3rem 0 2.5rem; }
+  .hero-inner { flex-direction: column; align-items: flex-start; gap: 2rem; }
+  .hero-badge-stack { flex-direction: row; flex-wrap: wrap; }
+  .badge-card { min-width: auto; flex: 1; min-width: 140px; }
+}
+
+@media (max-width: 480px) {
+  .hero-headline { letter-spacing: -.03em; }
+  .badge-card { padding: .75rem 1rem; }
+  .post-title, .post-desc { white-space: normal; overflow: visible; text-overflow: clip; }
+  .post-row-arrow { display: none; }
+}
+</style>

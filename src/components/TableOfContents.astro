@@ -1,0 +1,107 @@
+---
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+const filtered = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
+---
+
+{filtered.length >= 3 && (
+  <nav class="toc" aria-label="Table of contents">
+    <p class="toc-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Mục lục
+    </p>
+    <ol class="toc-list">
+      {filtered.map((h) => (
+        <li class={`toc-item depth-${h.depth}`}>
+          <a href={`#${h.slug}`} class="toc-link">{h.text}</a>
+        </li>
+      ))}
+    </ol>
+  </nav>
+)}
+
+<style>
+  .toc {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.125rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .toc-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 0.75rem;
+  }
+
+  .toc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .toc-item { line-height: 1.35; }
+
+  .depth-3 { padding-left: 1rem; }
+
+  .toc-link {
+    display: block;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: background 0.12s ease, color 0.12s ease;
+    line-height: 1.4;
+  }
+
+  .toc-link:hover {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--accent-text);
+  }
+
+  .toc-link.active {
+    background: var(--accent-subtle);
+    color: var(--accent-text);
+    font-weight: 600;
+  }
+</style>
+
+<script>
+  const links = document.querySelectorAll<HTMLAnchorElement>('.toc-link');
+  if (links.length > 0) {
+    const headingIds = [...links].map((l) => l.getAttribute('href')?.slice(1)).filter(Boolean) as string[];
+    const headings = headingIds.map((id) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
+
+    const observe = () => {
+      let active = '';
+      for (const el of headings) {
+        if (el.getBoundingClientRect().top < 120) active = el.id;
+      }
+      links.forEach((l) => {
+        l.classList.toggle('active', l.getAttribute('href') === `#${active}`);
+      });
+    };
+    window.addEventListener('scroll', observe, { passive: true });
+    observe();
+  }
+</script>

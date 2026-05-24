@@ -1,0 +1,70 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../../components/BaseHead.astro';
+import Footer from '../../../components/Footer.astro';
+import Header from '../../../components/Header.astro';
+import { SITE_TITLE } from '../../../consts';
+import { useTranslations } from '../../../i18n/utils';
+
+const t = useTranslations('vi');
+const all = await getCollection('blog', ({ data }) => !data.draft);
+const viPosts = all.filter(p => p.data.lang === 'vi');
+const viSlugs = new Set(viPosts.map(p => p.data.slug ?? p.id));
+const posts = [
+  ...viPosts,
+  ...all.filter(p => p.data.lang === 'en' && !viSlugs.has(p.data.slug ?? p.id)),
+];
+const map = new Map<string, number>();
+for (const p of posts)
+  for (const tag of p.data.tags ?? [])
+    map.set(tag, (map.get(tag) ?? 0) + 1);
+
+const tags = [...map.entries()].sort((a,b) => b[1]-a[1]).map(([tag,count]) => ({tag,count}));
+---
+
+<!doctype html>
+<html lang="vi">
+  <head>
+    <BaseHead title={`${t('tags.title')} · ${SITE_TITLE}`} description="Duyệt tất cả chủ đề." />
+  </head>
+  <body>
+    <Header />
+    <main>
+      <div class="container">
+        <header class="page-hd">
+          <h1>{t('tags.title')}</h1>
+          <p class="page-hd-sub">{t('tags.subtitle')(tags.length, posts.length)}</p>
+        </header>
+        {tags.length > 0 ? (
+          <ul class="tag-grid">
+            {tags.map(({ tag, count }) => (
+              <li>
+                <a href={`/vi/tags/${tag}/`} class="tag-card">
+                  <span class="tag-name">#{tag}</span>
+                  <span class="tag-count">{count}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="no-tags">Chưa có chủ đề. <a href="/tags">Xem chủ đề tiếng Anh →</a></p>
+        )}
+      </div>
+    </main>
+    <Footer />
+  </body>
+</html>
+
+<style>
+.page-hd { padding: 3rem 0 2rem; border-bottom: 1px solid var(--bd); margin-bottom: 2rem; }
+.page-hd h1 { font-size: clamp(2rem,5vw,2.75rem); letter-spacing:-.04em; margin-bottom:.375rem; }
+.page-hd-sub { font-size:.875rem; color:var(--fg-3); margin:0; }
+.tag-grid { list-style:none; display:flex; flex-wrap:wrap; gap:.625rem; }
+.tag-card { display: inline-flex; align-items: center; gap: .625rem; padding: .5rem 1rem; border: 1px solid var(--bd); border-radius: var(--r-lg); background: var(--surface); text-decoration: none; color: var(--fg); transition: border-color .15s, background .15s, box-shadow .15s, transform .15s; }
+.tag-card:hover { border-color: var(--clr-accent); background: color-mix(in srgb, var(--clr-accent) 6%, var(--surface)); box-shadow: var(--sh-sm); transform: translateY(-1px); }
+.tag-name { font-size:.9rem; font-weight:600; transition:color .15s; }
+.tag-card:hover .tag-name { color: var(--clr-accent); }
+.tag-count { font-size: .7rem; font-weight: 600; color: var(--fg-3); background: var(--bg-1); border: 1px solid var(--bd); padding: .1em .55em; border-radius: 99px; min-width: 20px; text-align: center; }
+.no-tags { padding: 3rem 0; color: var(--fg-2); }
+.no-tags a { color: var(--clr-accent); }
+</style>

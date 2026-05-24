@@ -1,0 +1,37 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+type Props = HTMLAttributes<'a'>;
+const { href, class: className, ...props } = Astro.props;
+const pathname = Astro.url.pathname.replace(import.meta.env.BASE_URL, '');
+const subpath  = pathname.match(/[^\/]+/g);
+const isActive = href === pathname || href === '/' + (subpath?.[0] ?? '');
+---
+
+<a href={href} class:list={['nav-item', className, { 'is-active': isActive }]} {...props}>
+  <slot />
+</a>
+
+<style>
+  .nav-item {
+    font-size: .875rem;
+    font-weight: 500;
+    color: var(--fg-2);
+    padding: .375rem .75rem;
+    border-radius: var(--r-md);
+    text-decoration: none;
+    transition: background .12s, color .12s;
+    white-space: nowrap;
+  }
+
+  .nav-item:hover {
+    color: var(--fg);
+    background: var(--bg-1);
+  }
+
+  .nav-item.is-active {
+    color: var(--clr-accent);
+    background: color-mix(in srgb, var(--clr-accent) 10%, transparent);
+    font-weight: 600;
+  }
+</style>

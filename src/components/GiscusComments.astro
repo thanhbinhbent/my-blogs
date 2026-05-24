@@ -1,0 +1,58 @@
+---
+import { GISCUS_CATEGORY, GISCUS_CATEGORY_ID, GISCUS_REPO, GISCUS_REPO_ID } from '../consts';
+---
+
+<section class="comments-section" aria-label="Comments">
+  <h2 class="comments-title">Bình luận</h2>
+  <div class="giscus-wrapper">
+    <script
+      is:inline
+      src="https://giscus.app/client.js"
+      data-repo={GISCUS_REPO}
+      data-repo-id={GISCUS_REPO_ID}
+      data-category={GISCUS_CATEGORY}
+      data-category-id={GISCUS_CATEGORY_ID}
+      data-mapping="pathname"
+      data-strict="0"
+      data-reactions-enabled="1"
+      data-emit-metadata="0"
+      data-input-position="top"
+      data-theme="preferred_color_scheme"
+      data-lang="vi"
+      data-loading="lazy"
+      crossorigin="anonymous"
+      async
+    ></script>
+  </div>
+</section>
+
+<style>
+  .comments-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .comments-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: rgb(var(--black));
+  }
+</style>
+
+<script>
+  function syncGiscusTheme() {
+    const isDark = document.documentElement.classList.contains('dark');
+    const theme = isDark ? 'dark' : 'light';
+    const giscusFrame = document.querySelector<HTMLIFrameElement>('.giscus-frame');
+    if (giscusFrame) {
+      giscusFrame.contentWindow?.postMessage(
+        { giscus: { setConfig: { theme } } },
+        'https://giscus.app'
+      );
+    }
+  }
+
+  const observer = new MutationObserver(() => syncGiscusTheme());
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+</script>
