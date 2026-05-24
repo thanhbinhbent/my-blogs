@@ -5,8 +5,12 @@ import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'astro/config';
 
+const site = process.env.SITE ?? 'https://blogs.binh.app';
+const base = process.env.BASE_PATH ?? '/';
+
 export default defineConfig({
-  site: 'https://blogs.binh.app',
+  site,
+  base,
   integrations: [
     mdx(),
     sitemap(),
