@@ -1,0 +1,24 @@
+---
+title: "Liveness, Readiness & Startup Probes"
+description: "Configure health probes to let Kubernetes know when your container is alive, ready to serve traffic, and fully started."
+type: reading
+duration: 20
+order: 2
+chapterTitle: "Observability"
+chapterOrder: 10
+draft: false
+---
+
+> **Full content coming soon.** This lesson is being written.
+
+This lesson covers health probes:
+
+- **Liveness probe**: container is alive; fail → restart
+- **Readiness probe**: container is ready for traffic; fail → remove from Service endpoints
+- **Startup probe**: container has finished initializing; blocks liveness checks until success
+- Probe types: HTTP GET, TCP Socket, gRPC, Exec command
+- Probe parameters: `initialDelaySeconds`, `periodSeconds`, `failureThreshold`, `successThreshold`
+- Common mistakes: overly strict probes causing restart loops
+- Designing good health check endpoints
+
+Check back soon for the full content.

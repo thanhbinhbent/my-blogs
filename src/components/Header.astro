@@ -1,5 +1,5 @@
 ---
-import { getLangFromUrl, getLocalePath, useTranslations } from '../i18n/utils';
+import { getLangFromUrl, getLocalePath, useTranslations, withBase } from '../i18n/utils';
 import { SITE_BRAND } from '../consts';
 import HeaderLink from './HeaderLink.astro';
 import LangSwitcher from './LangSwitcher.astro';
@@ -22,6 +22,7 @@ const t = useTranslations(lang);
     <nav class="nav" aria-label="Main navigation">
       <HeaderLink href={getLocalePath('/post', lang)}>{t('nav.blog')}</HeaderLink>
       <HeaderLink href={getLocalePath('/tags', lang)}>{t('nav.topics')}</HeaderLink>
+      <HeaderLink href={withBase('/courses/')}>Courses</HeaderLink>
       <HeaderLink href={getLocalePath('/about', lang)}>{t('nav.about')}</HeaderLink>
     </nav>
 
@@ -49,6 +50,7 @@ const t = useTranslations(lang);
     <div class="container mobile-nav-inner">
       <HeaderLink href={getLocalePath('/post', lang)}>{t('nav.blog')}</HeaderLink>
       <HeaderLink href={getLocalePath('/tags', lang)}>{t('nav.topics')}</HeaderLink>
+      <HeaderLink href={withBase('/courses/')}>Courses</HeaderLink>
       <HeaderLink href={getLocalePath('/about', lang)}>{t('nav.about')}</HeaderLink>
     </div>
   </nav>

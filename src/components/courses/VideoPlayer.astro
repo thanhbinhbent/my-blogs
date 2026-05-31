@@ -1,0 +1,60 @@
+---
+interface Props {
+  url: string;
+  title?: string;
+}
+
+const { url, title = 'Video lesson' } = Astro.props;
+
+function getEmbedUrl(raw: string): string {
+  try {
+    const u = new URL(raw);
+    // YouTube
+    if (u.hostname.includes('youtube.com') || u.hostname.includes('youtu.be')) {
+      const id = u.hostname.includes('youtu.be')
+        ? u.pathname.slice(1)
+        : u.searchParams.get('v') ?? '';
+      return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1`;
+    }
+    // Vimeo
+    if (u.hostname.includes('vimeo.com')) {
+      const id = u.pathname.slice(1);
+      return `https://player.vimeo.com/video/${id}`;
+    }
+  } catch {}
+  return raw;
+}
+
+const embedUrl = getEmbedUrl(url);
+---
+
+<div class="video-wrapper">
+  <iframe
+    src={embedUrl}
+    title={title}
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    allowfullscreen
+    loading="lazy"
+  ></iframe>
+</div>
+
+<style>
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: #000;
+  box-shadow: var(--sh-lg);
+  margin: 1.5rem 0;
+}
+
+iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+</style>

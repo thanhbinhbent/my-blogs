@@ -1,0 +1,23 @@
+---
+title: "API Server Deep Dive"
+description: "Understand every stage of a Kubernetes API request — authentication, authorization, admission control, and validation."
+type: reading
+duration: 20
+order: 4
+chapterTitle: "Core Architecture"
+chapterOrder: 2
+draft: false
+---
+
+> **Full content coming soon.** This lesson is being written.
+
+This lesson covers the kube-apiserver in depth:
+
+- Full request lifecycle: AuthN → AuthZ → Admission → Validation → Storage
+- Authentication methods: client certs, bearer tokens, OIDC, webhook
+- Authorization: RBAC, ABAC, Node, Webhook modes
+- Admission controllers: built-in (LimitRanger, ResourceQuota) vs webhooks
+- API groups and versioning (`/api/v1` vs `/apis/apps/v1`)
+- API aggregation layer and CRDs
+
+Check back soon for the full content.

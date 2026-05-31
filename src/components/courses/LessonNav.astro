@@ -1,0 +1,102 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { getLessonPath } from '../../utils/courses';
+import { withBase } from '../../i18n/utils';
+
+interface Props {
+  prev?: CollectionEntry<'lessons'>;
+  next?: CollectionEntry<'lessons'>;
+  courseSlug: string;
+}
+
+const { prev, next, courseSlug } = Astro.props;
+
+function href(lesson: CollectionEntry<'lessons'>) {
+  return withBase(`/courses/${courseSlug}/${getLessonPath(lesson)}/`);
+}
+---
+
+<nav class="lesson-nav" aria-label="Lesson navigation">
+  {prev ? (
+    <a href={href(prev)} class="nav-link nav-prev">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      <span class="nav-info">
+        <span class="nav-label">Previous</span>
+        <span class="nav-title">{prev.data.title}</span>
+      </span>
+    </a>
+  ) : <div />}
+
+  {next && (
+    <a href={href(next)} class="nav-link nav-next">
+      <span class="nav-info">
+        <span class="nav-label">Next</span>
+        <span class="nav-title">{next.data.title}</span>
+      </span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </a>
+  )}
+</nav>
+
+<style>
+.lesson-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+  padding-top: 1.5rem;
+  margin-top: .5rem;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .875rem 1.125rem;
+  border: 1px solid var(--bd);
+  border-radius: var(--r-lg);
+  text-decoration: none;
+  color: var(--fg);
+  transition: border-color .15s, background .15s, transform .1s;
+}
+
+.nav-link:hover {
+  border-color: var(--clr-course);
+  background: color-mix(in srgb, var(--clr-course) 4%, transparent);
+  color: var(--fg);
+  transform: translateY(-1px);
+}
+
+.nav-link svg { flex-shrink: 0; color: var(--fg-3); }
+.nav-link:hover svg { color: var(--clr-course); }
+
+.nav-next { justify-content: flex-end; text-align: right; }
+
+.nav-info {
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+  min-width: 0;
+}
+
+.nav-label {
+  font-size: .6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--fg-3);
+}
+
+.nav-title {
+  font-size: .875rem;
+  font-weight: 600;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 600px) {
+  .lesson-nav { grid-template-columns: 1fr; }
+  .nav-next { justify-content: flex-start; text-align: left; }
+}
+</style>

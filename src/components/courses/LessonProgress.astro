@@ -1,0 +1,125 @@
+---
+interface Props {
+  lessonId: string;
+  courseSlug: string;
+  nextHref?: string;
+}
+
+const { lessonId, courseSlug, nextHref } = Astro.props;
+---
+
+<div class="lesson-progress-wrap" data-lesson-id={lessonId} data-course-slug={courseSlug}>
+  <button class="complete-btn" id="lesson-complete-btn" type="button">
+    <svg class="btn-icon check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+    <span class="btn-text">Mark as Complete</span>
+  </button>
+
+  {nextHref && (
+    <a href={nextHref} class="next-btn" id="lesson-next-btn">
+      Next Lesson
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </a>
+  )}
+</div>
+
+<script>
+  const wrap = document.querySelector<HTMLElement>('.lesson-progress-wrap');
+  const btn = document.getElementById('lesson-complete-btn') as HTMLButtonElement | null;
+  if (!wrap || !btn) throw new Error();
+
+  const lessonId = wrap.dataset.lessonId!;
+  const courseSlug = wrap.dataset.courseSlug!;
+  const KEY = `course_progress_${courseSlug}`;
+
+  function getProgress() {
+    try { return JSON.parse(localStorage.getItem(KEY) ?? '{}'); } catch { return {}; }
+  }
+
+  function setProgress(p: any) {
+    localStorage.setItem(KEY, JSON.stringify(p));
+  }
+
+  function refresh() {
+    const p = getProgress();
+    const done = (p.completedLessons ?? []).includes(lessonId);
+    btn!.classList.toggle('done', done);
+    btn!.querySelector('.btn-text')!.textContent = done ? 'Completed ✓' : 'Mark as Complete';
+  }
+
+  refresh();
+
+  btn.addEventListener('click', () => {
+    const p = getProgress();
+    if (!p.completedLessons) p.completedLessons = [];
+    const idx = p.completedLessons.indexOf(lessonId);
+    if (idx === -1) {
+      p.completedLessons.push(lessonId);
+      p.lastVisited = lessonId;
+    } else {
+      p.completedLessons.splice(idx, 1);
+    }
+    setProgress(p);
+    refresh();
+    window.dispatchEvent(new CustomEvent('lesson-progress-update', { detail: { courseSlug } }));
+  });
+</script>
+
+<style>
+.lesson-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  flex-wrap: wrap;
+  padding: 1.5rem 0 .5rem;
+  border-top: 1px solid var(--bd);
+  margin-top: 2.5rem;
+}
+
+.complete-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .625rem 1.25rem;
+  border: 2px solid var(--bd-1);
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--fg-2);
+  font-size: .875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.complete-btn:hover {
+  border-color: var(--clr-accent);
+  color: var(--clr-accent);
+  background: color-mix(in srgb, var(--clr-accent) 8%, transparent);
+}
+
+.complete-btn.done {
+  border-color: var(--clr-accent);
+  background: color-mix(in srgb, var(--clr-accent) 12%, transparent);
+  color: var(--clr-accent);
+}
+
+.next-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .625rem 1.25rem;
+  background: var(--clr-course);
+  color: #fff;
+  border-radius: var(--r-md);
+  font-size: .875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background .15s, transform .1s;
+  margin-left: auto;
+}
+
+.next-btn:hover {
+  background: var(--clr-course-2);
+  color: #fff;
+  transform: translateX(2px);
+}
+</style>

@@ -1,0 +1,421 @@
+---
+interface Question {
+  question: string;
+  options: string[];
+  correct: number;
+  explanation?: string;
+}
+
+interface Props {
+  questions: Question[];
+  lessonId: string;
+  courseSlug: string;
+}
+
+const { questions, lessonId, courseSlug } = Astro.props;
+---
+
+{questions.length === 0 ? (
+  <div class="quiz-soon">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    <p>Quiz questions are being prepared. Check back soon!</p>
+  </div>
+) : (
+  <div
+    class="quiz-engine"
+    data-lesson-id={lessonId}
+    data-course-slug={courseSlug}
+    data-total={questions.length}
+  >
+    <div class="quiz-header">
+      <div class="quiz-meta">
+        <span class="quiz-badge">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Quiz
+        </span>
+        <span class="quiz-count">{questions.length} questions</span>
+      </div>
+      <div class="quiz-progress-row">
+        <div class="quiz-prog-bar"><div class="quiz-prog-fill" style="width:0%"></div></div>
+        <span class="quiz-prog-label">0 / {questions.length}</span>
+      </div>
+    </div>
+
+    <div class="quiz-questions">
+      {questions.map((q, qi) => (
+        <div
+          class="quiz-q"
+          data-qi={qi}
+          data-correct={q.correct}
+        >
+          <div class="q-number">Question {qi + 1}</div>
+          <p class="q-text">{q.question}</p>
+          <ul class="q-options" role="list">
+            {q.options.map((opt, oi) => (
+              <li>
+                <button
+                  class="q-opt"
+                  data-oi={oi}
+                  type="button"
+                >
+                  <span class="opt-letter">{String.fromCharCode(65 + oi)}</span>
+                  <span class="opt-text">{opt}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          {q.explanation && (
+            <div class="q-explanation" hidden>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              <span>{q.explanation}</span>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+
+    <div class="quiz-results" hidden>
+      <div class="result-icon" aria-hidden="true"></div>
+      <div class="result-score"></div>
+      <p class="result-msg"></p>
+      <button class="quiz-retry-btn" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.11"/></svg>
+        Try Again
+      </button>
+    </div>
+  </div>
+)}
+
+<script>
+  document.querySelectorAll<HTMLElement>('.quiz-engine').forEach(engine => {
+    const lessonId = engine.dataset.lessonId!;
+    const courseSlug = engine.dataset.courseSlug!;
+    const total = parseInt(engine.dataset.total ?? '0');
+    let answered = 0;
+    let correct = 0;
+
+    const progFill = engine.querySelector<HTMLElement>('.quiz-prog-fill')!;
+    const progLabel = engine.querySelector<HTMLElement>('.quiz-prog-label')!;
+
+    engine.querySelectorAll<HTMLElement>('.quiz-q').forEach(qEl => {
+      const correctIdx = parseInt(qEl.dataset.correct ?? '0');
+
+      qEl.querySelectorAll<HTMLButtonElement>('.q-opt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (qEl.dataset.answered) return;
+          qEl.dataset.answered = '1';
+
+          const chosenIdx = parseInt(btn.dataset.oi ?? '-1');
+          const isRight = chosenIdx === correctIdx;
+
+          qEl.querySelectorAll<HTMLButtonElement>('.q-opt').forEach((b, i) => {
+            b.disabled = true;
+            if (i === correctIdx) b.classList.add('correct');
+            if (i === chosenIdx && !isRight) b.classList.add('wrong');
+          });
+
+          const expEl = qEl.querySelector<HTMLElement>('.q-explanation');
+          if (expEl) expEl.hidden = false;
+
+          if (isRight) correct++;
+          answered++;
+
+          const pct = Math.round((answered / total) * 100);
+          progFill.style.width = `${pct}%`;
+          progLabel.textContent = `${answered} / ${total}`;
+
+          if (answered === total) showResults();
+        });
+      });
+    });
+
+    function showResults() {
+      engine.querySelector('.quiz-questions')!.setAttribute('hidden', '');
+      const resultsEl = engine.querySelector<HTMLElement>('.quiz-results')!;
+      resultsEl.hidden = false;
+
+      const pct = Math.round((correct / total) * 100);
+      const scoreEl = resultsEl.querySelector<HTMLElement>('.result-score')!;
+      const iconEl = resultsEl.querySelector<HTMLElement>('.result-icon')!;
+      const msgEl = resultsEl.querySelector<HTMLElement>('.result-msg')!;
+
+      scoreEl.textContent = `${correct} / ${total} correct  (${pct}%)`;
+
+      if (pct >= 80) {
+        iconEl.textContent = '🎉';
+        msgEl.textContent = 'Excellent work! You have a solid understanding of this module.';
+      } else if (pct >= 60) {
+        iconEl.textContent = '👍';
+        msgEl.textContent = 'Good effort! Review the lessons you missed and try again.';
+      } else {
+        iconEl.textContent = '📖';
+        msgEl.textContent = 'Take some time to review the module content and try again.';
+      }
+
+      // Save to localStorage
+      try {
+        const KEY = `course_progress_${courseSlug}`;
+        const p = JSON.parse(localStorage.getItem(KEY) ?? '{}');
+        if (!p.quizScores) p.quizScores = {};
+        p.quizScores[lessonId] = {
+          score: pct,
+          attempts: ((p.quizScores[lessonId]?.attempts) ?? 0) + 1,
+          lastAttemptAt: new Date().toISOString(),
+        };
+        localStorage.setItem(KEY, JSON.stringify(p));
+        window.dispatchEvent(new CustomEvent('lesson-progress-update', { detail: { courseSlug } }));
+      } catch {}
+    }
+
+    engine.querySelector('.quiz-retry-btn')?.addEventListener('click', () => {
+      engine.querySelectorAll<HTMLElement>('.quiz-q').forEach(qEl => {
+        delete qEl.dataset.answered;
+        qEl.querySelectorAll<HTMLButtonElement>('.q-opt').forEach(b => {
+          b.disabled = false;
+          b.classList.remove('correct', 'wrong');
+        });
+        const expEl = qEl.querySelector<HTMLElement>('.q-explanation');
+        if (expEl) expEl.hidden = true;
+      });
+
+      engine.querySelector('.quiz-questions')!.removeAttribute('hidden');
+      engine.querySelector<HTMLElement>('.quiz-results')!.hidden = true;
+
+      answered = 0; correct = 0;
+      progFill.style.width = '0%';
+      progLabel.textContent = `0 / ${total}`;
+    });
+  });
+</script>
+
+<style>
+.quiz-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .875rem;
+  padding: 3rem 2rem;
+  border: 2px dashed var(--bd);
+  border-radius: var(--r-xl);
+  color: var(--fg-3);
+  text-align: center;
+}
+
+.quiz-engine {
+  border: 1px solid var(--bd);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  margin: 2rem 0;
+}
+
+.quiz-header {
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--bd);
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+
+.quiz-meta {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.quiz-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: var(--clr-quiz);
+  background: color-mix(in srgb, var(--clr-quiz) 10%, transparent);
+  padding: .25em .75em;
+  border-radius: 99px;
+}
+
+.quiz-count {
+  font-size: .8125rem;
+  color: var(--fg-3);
+}
+
+.quiz-progress-row {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.quiz-prog-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--bg-2);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.quiz-prog-fill {
+  height: 100%;
+  background: var(--clr-quiz);
+  border-radius: 99px;
+  transition: width .3s ease;
+}
+
+.quiz-prog-label {
+  font-size: .75rem;
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+
+.quiz-questions {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.quiz-q { display: flex; flex-direction: column; gap: .875rem; }
+
+.q-number {
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--clr-quiz);
+}
+
+.q-text {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--fg);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.q-options {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.q-opt {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+  width: 100%;
+  padding: .75rem 1rem;
+  border: 1.5px solid var(--bd);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: .9375rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .12s, background .12s;
+}
+
+.q-opt:hover:not(:disabled) {
+  border-color: var(--clr-quiz);
+  background: color-mix(in srgb, var(--clr-quiz) 5%, transparent);
+}
+
+.q-opt:disabled { cursor: default; }
+
+.q-opt.correct {
+  border-color: var(--clr-accent);
+  background: color-mix(in srgb, var(--clr-accent) 10%, transparent);
+  color: var(--clr-accent);
+}
+
+.q-opt.wrong {
+  border-color: #ef4444;
+  background: color-mix(in srgb, #ef4444 10%, transparent);
+  color: #ef4444;
+}
+
+.opt-letter {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .6875rem;
+  font-weight: 700;
+  opacity: .7;
+}
+
+.opt-text { line-height: 1.5; }
+
+.q-explanation {
+  display: flex;
+  align-items: flex-start;
+  gap: .5rem;
+  padding: .875rem 1rem;
+  background: color-mix(in srgb, var(--clr-course) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--clr-course) 20%, transparent);
+  border-radius: var(--r-md);
+  font-size: .875rem;
+  color: var(--fg-1);
+  line-height: 1.6;
+}
+
+.q-explanation svg { flex-shrink: 0; margin-top: 2px; color: var(--clr-course); }
+
+.quiz-results {
+  padding: 3rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.result-icon { font-size: 3rem; line-height: 1; }
+
+.result-score {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.result-msg {
+  color: var(--fg-2);
+  font-size: .9375rem;
+  max-width: 400px;
+  margin: 0;
+}
+
+.quiz-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .625rem 1.25rem;
+  border: 1.5px solid var(--bd-1);
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--fg-2);
+  font-size: .875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color .12s, color .12s, background .12s;
+}
+
+.quiz-retry-btn:hover {
+  border-color: var(--clr-quiz);
+  color: var(--clr-quiz);
+  background: color-mix(in srgb, var(--clr-quiz) 6%, transparent);
+}
+
+@media (max-width: 600px) {
+  .quiz-questions { padding: 1rem; }
+  .q-opt { padding: .625rem .875rem; font-size: .875rem; }
+}
+</style>

@@ -1,0 +1,94 @@
+---
+title: "What is Kubernetes?"
+description: "Understand what Kubernetes is, why it was created at Google, and what container orchestration problems it solves."
+type: reading
+duration: 12
+order: 1
+chapterTitle: "Introduction to Kubernetes"
+chapterOrder: 1
+draft: false
+---
+
+## The Origin Story
+
+Kubernetes (abbreviated **K8s**) was born inside Google. For over a decade, Google ran billions of containers per week using an internal cluster management system called **Borg**. When Google decided to share this knowledge with the world, Kubernetes was the result — an open-source reimagining of Borg's core principles.
+
+Released in **2014** and donated to the **Cloud Native Computing Foundation (CNCF)** in 2016, Kubernetes quickly became the most widely adopted container orchestration platform in the world.
+
+> The name "Kubernetes" comes from the ancient Greek word for **helmsman** or **pilot** — the person who steers a ship. This metaphor captures exactly what Kubernetes does: it steers your containerized applications through the seas of distributed infrastructure.
+
+## What Problem Does Kubernetes Solve?
+
+Imagine you have a modern application consisting of 20+ microservices, each running as a Docker container. In a production environment, you need to:
+
+- **Run multiple copies** of each service for reliability and performance
+- **Automatically restart** failed containers before users notice
+- **Distribute load** across healthy instances in real time
+- **Roll out updates** without any downtime
+- **Scale up** when traffic spikes and **scale down** to save costs overnight
+- **Manage configuration and secrets** securely across environments
+- **Route network traffic** between dozens of services
+
+Doing all this manually with shell scripts is error-prone, slow, and impossible to scale. Kubernetes automates every one of these concerns.
+
+## What Kubernetes Actually Does
+
+Kubernetes is a **container orchestration platform**. It manages the lifecycle of containers across a fleet of machines (called a *cluster*). Here's what that means in practice:
+
+### Scheduling
+Kubernetes decides *where* to run each container based on available CPU and memory, constraints you define, affinity rules, and policies. No more manually deciding which server gets which workload.
+
+### Self-Healing
+If a container crashes, Kubernetes automatically restarts it. If a node dies, Kubernetes reschedules all of its containers on healthy nodes — without human intervention.
+
+### Scaling
+Kubernetes can automatically scale applications up or down based on CPU usage, memory pressure, custom application metrics, or even a cron schedule.
+
+### Service Discovery & Load Balancing
+Kubernetes gives each group of containers a stable DNS name and IP address, automatically load-balancing traffic between them even as containers start, stop, and move between nodes.
+
+### Automated Rollouts & Rollbacks
+Kubernetes rolls out new container image versions gradually, monitoring health at each step. If anything fails, it automatically rolls back to the last known-good version.
+
+### Storage Orchestration
+Kubernetes can automatically provision and attach storage volumes from cloud providers, local disk, or network storage systems — and re-attach them if a container moves to a different node.
+
+### Configuration Management
+Kubernetes provides **ConfigMaps** for non-secret configuration and **Secrets** for sensitive data, decoupled from your container images.
+
+## The Kubernetes Ecosystem
+
+Kubernetes doesn't work in isolation — it's the center of a rich ecosystem standardized by the CNCF:
+
+| Layer | Tools |
+|-------|-------|
+| **Packaging** | Helm, Kustomize |
+| **CI/CD & GitOps** | ArgoCD, Flux, Tekton |
+| **Service Mesh** | Istio, Linkerd, Cilium |
+| **Monitoring** | Prometheus, Grafana, Datadog |
+| **Storage** | Rook, Longhorn, CSI drivers |
+| **Security** | Falco, OPA/Gatekeeper, Kyverno |
+
+This landscape is the foundation of what's called **Cloud Native** software development.
+
+## Kubernetes vs. Docker
+
+A common misconception: *"Kubernetes replaces Docker."*
+
+That's not accurate. Docker is a tool for *building and running* containers on a single machine. Kubernetes is a tool for *orchestrating* containers across many machines.
+
+They're complementary technologies:
+- **Docker** (or containerd) runs containers on each individual node
+- **Kubernetes** decides which node runs them and manages their entire lifecycle
+
+Think of Docker as the car engine, and Kubernetes as the fleet management system coordinating thousands of cars across a city.
+
+## Key Takeaways
+
+- Kubernetes was created at Google (inspired by Borg), open-sourced in 2014, and is governed by the CNCF
+- It solves the problem of managing containers at scale across many machines
+- Core capabilities: scheduling, self-healing, scaling, service discovery, rolling updates, storage, configuration
+- It's the industry standard — used by companies from startups to Fortune 500
+- Works *with* Docker/containerd, not as a replacement for it
+
+In the next lesson, we'll explore *why* you specifically need an orchestrator and when Kubernetes is (and isn't) the right choice for your situation.

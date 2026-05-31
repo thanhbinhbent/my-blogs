@@ -246,6 +246,38 @@ pre > code { all: unset; color: #c0caf5; }
 }
 
 /* ─────────────────────────────────────────────
+   COURSE / E-LEARNING TOKENS
+───────────────────────────────────────────── */
+:root {
+  --clr-course:   #2563EB;
+  --clr-course-2: #1d4ed8;
+  --clr-quiz:     #7C3AED;
+  --clr-video:    #DC2626;
+  --clr-exam:     #D97706;
+  --sidebar-w:    280px;
+  --lesson-max:   740px;
+}
+
+.dark {
+  --clr-course:   #3b82f6;
+  --clr-course-2: #2563eb;
+  --clr-quiz:     #a78bfa;
+}
+
+/* ─────────────────────────────────────────────
+   DETAILS / SUMMARY RESET
+───────────────────────────────────────────── */
+details { list-style: none; }
+
+summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+summary::-webkit-details-marker { display: none; }
+summary::marker { display: none; content: ''; }
+
+/* ─────────────────────────────────────────────
    UTILS
 ───────────────────────────────────────────── */
 .sr-only {

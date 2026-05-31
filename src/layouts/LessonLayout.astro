@@ -1,0 +1,287 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import CourseSidebar from '../components/courses/CourseSidebar.astro';
+import LessonTypeIcon from '../components/courses/LessonTypeIcon.astro';
+import LessonNav from '../components/courses/LessonNav.astro';
+import LessonProgress from '../components/courses/LessonProgress.astro';
+import VideoPlayer from '../components/courses/VideoPlayer.astro';
+import QuizEngine from '../components/courses/QuizEngine.astro';
+import { groupByChapter, getLessonPath, getAdjacentLessons, formatDuration } from '../utils/courses';
+import { withBase } from '../i18n/utils';
+
+interface Props {
+  lesson: CollectionEntry<'lessons'>;
+  course: CollectionEntry<'courses'>;
+  allCourseLessons: CollectionEntry<'lessons'>[];
+}
+
+const { lesson, course, allCourseLessons } = Astro.props;
+const { title, description, type, duration, videoUrl, quizData = [] } = lesson.data;
+const courseSlug = course.id;
+const lessonPath = getLessonPath(lesson);
+
+const chapters = groupByChapter(allCourseLessons);
+const { prev, next } = getAdjacentLessons(lesson, allCourseLessons);
+const totalLessons = allCourseLessons.filter(l => !l.data.draft).length;
+
+const typeConfig: Record<string, { label: string; color: string }> = {
+  reading: { label: 'Reading',   color: 'var(--clr-course)' },
+  video:   { label: 'Video',     color: 'var(--clr-video)'  },
+  quiz:    { label: 'Quiz',      color: 'var(--clr-quiz)'   },
+  exam:    { label: 'Final Exam',color: 'var(--clr-exam)'   },
+};
+const tc = typeConfig[type] ?? typeConfig.reading;
+const courseColor = course.data.color ?? '#2563EB';
+const nextHref = next ? withBase(`/courses/${courseSlug}/${getLessonPath(next)}/`) : undefined;
+---
+
+<html lang="en">
+  <head>
+    <BaseHead
+      title={`${title} — ${course.data.title}`}
+      description={description ?? course.data.description}
+    />
+    <style define:vars={{ courseColor }}>
+      :root { --c: var(--courseColor); }
+    </style>
+  </head>
+
+  <body class="lesson-body">
+    <Header />
+
+    <!-- Reading progress bar -->
+    <div class="lesson-reading-progress" id="reading-progress" aria-hidden="true" style={`background: linear-gradient(90deg, ${courseColor}, var(--clr-quiz))`}></div>
+    <!-- Course accent line -->
+    <div class="lesson-accent-bar" style={`background: linear-gradient(90deg, ${courseColor}, var(--clr-quiz))`}></div>
+
+    <div class="lesson-page">
+      <CourseSidebar
+        chapters={chapters}
+        courseSlug={courseSlug}
+        courseTitle={course.data.title}
+        currentLessonId={lesson.id}
+        totalLessons={totalLessons}
+      />
+
+      <main class="lesson-main">
+        <article class="lesson-article">
+
+          <!-- Breadcrumb -->
+          <nav class="lesson-breadcrumb" aria-label="Breadcrumb">
+            <a href={withBase('/courses/')}>Courses</a>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            <a href={withBase(`/courses/${courseSlug}/`)}>{course.data.title}</a>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            <span>{lesson.data.chapterTitle}</span>
+          </nav>
+
+          <!-- Lesson header -->
+          <header class="lesson-header">
+            <div class="lesson-header-meta">
+              <span class="lesson-type-badge" style={`color: ${tc.color}; background: color-mix(in srgb, ${tc.color} 10%, transparent); border-color: color-mix(in srgb, ${tc.color} 25%, transparent)`}>
+                <LessonTypeIcon type={type} size={12} />
+                {tc.label}
+              </span>
+              {duration && (
+                <span class="lesson-duration">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  {formatDuration(duration)} read
+                </span>
+              )}
+            </div>
+
+            <h1 class="lesson-title">{title}</h1>
+            {description && <p class="lesson-desc">{description}</p>}
+          </header>
+
+          <div class="lesson-divider"></div>
+
+          <!-- Video -->
+          {type === 'video' && videoUrl && (
+            <VideoPlayer url={videoUrl} title={title} />
+          )}
+
+          <!-- Body -->
+          <div class="prose lesson-prose">
+            <slot />
+          </div>
+
+          <!-- Quiz / Exam -->
+          {(type === 'quiz' || type === 'exam') && (
+            <div class="lesson-quiz-section">
+              <QuizEngine
+                questions={quizData}
+                lessonId={lesson.id}
+                courseSlug={courseSlug}
+              />
+            </div>
+          )}
+
+          <!-- Mark complete + next -->
+          <LessonProgress
+            lessonId={lesson.id}
+            courseSlug={courseSlug}
+            nextHref={nextHref}
+          />
+
+          <!-- Prev / Next -->
+          <LessonNav prev={prev} next={next} courseSlug={courseSlug} />
+
+        </article>
+      </main>
+    </div>
+
+    <Footer />
+  </body>
+</html>
+
+<script>
+  const bar = document.getElementById('reading-progress');
+  if (bar) {
+    const update = () => {
+      const h = document.documentElement;
+      const pct = h.scrollTop / (h.scrollHeight - h.clientHeight);
+      bar.style.width = isFinite(pct) ? `${pct * 100}%` : '0%';
+    };
+    window.addEventListener('scroll', update, { passive: true });
+  }
+</script>
+
+<style>
+.lesson-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.lesson-reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 0%;
+  z-index: 999;
+  transition: width .08s linear;
+}
+
+.lesson-accent-bar {
+  height: 3px;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.lesson-page {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Main content ── */
+.lesson-main {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg);
+}
+
+.lesson-article {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2.25rem 2.5rem 5rem;
+}
+
+/* Breadcrumb */
+.lesson-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: .375rem;
+  flex-wrap: wrap;
+  font-size: .75rem;
+  color: var(--fg-3);
+  margin-bottom: 2rem;
+}
+
+.lesson-breadcrumb a {
+  color: var(--fg-3);
+  text-decoration: none;
+  transition: color .12s;
+}
+
+.lesson-breadcrumb a:hover { color: var(--clr-course); }
+.lesson-breadcrumb svg { color: var(--fg-3); opacity: .5; }
+
+/* Header */
+.lesson-header {
+  margin-bottom: 1.75rem;
+}
+
+.lesson-header-meta {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-bottom: 1rem;
+}
+
+.lesson-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .375rem;
+  font-size: .6875rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: .3em .8em;
+  border-radius: 99px;
+  border: 1px solid;
+}
+
+.lesson-duration {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .8125rem;
+  color: var(--fg-3);
+}
+
+.lesson-title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 900;
+  letter-spacing: -.04em;
+  line-height: 1.1;
+  color: var(--fg);
+  margin-bottom: .75rem;
+}
+
+.lesson-desc {
+  font-size: 1.0625rem;
+  color: var(--fg-2);
+  line-height: 1.65;
+  max-width: 600px;
+}
+
+.lesson-divider {
+  height: 1px;
+  background: linear-gradient(90deg, var(--bd), transparent);
+  margin: 1.5rem 0 2rem;
+}
+
+/* Prose */
+.lesson-prose {
+  font-size: 1.0625rem;
+}
+
+.lesson-quiz-section { margin-top: 2rem; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .lesson-article { padding: 1.5rem 1.25rem 5rem; }
+}
+
+@media (max-width: 600px) {
+  .lesson-article { padding: 1.25rem 1rem 5rem; }
+  .lesson-title { font-size: 1.625rem; }
+  .lesson-breadcrumb { font-size: .6875rem; }
+}
+</style>

@@ -1,0 +1,728 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../../components/BaseHead.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import LessonTypeIcon from '../../../components/courses/LessonTypeIcon.astro';
+import { groupByChapter, getLessonPath, getLevelLabel, getLevelColor, formatDuration } from '../../../utils/courses';
+import { withBase } from '../../../i18n/utils';
+
+export async function getStaticPaths() {
+  const courses = await getCollection('courses', c => c.data.published);
+  return courses.map(course => ({
+    params: { courseSlug: course.id },
+    props: { course },
+  }));
+}
+
+const { course } = Astro.props;
+const courseSlug = course.id;
+
+const allLessons = await getCollection('lessons', l => !l.data.draft && l.id.startsWith(`${courseSlug}/`));
+const chapters = groupByChapter(allLessons);
+const totalLessons = allLessons.length;
+const firstLesson = chapters[0]?.lessons[0];
+const firstLessonHref = firstLesson ? withBase(`/courses/${courseSlug}/${getLessonPath(firstLesson)}/`) : '#';
+
+const { title, description, level, tags, estimatedHours, prerequisites, color } = course.data;
+const levelLabel = getLevelLabel(level);
+const levelColor = getLevelColor(level);
+
+const totalQuizzes = allLessons.filter(l => l.data.type === 'quiz' || l.data.type === 'exam').length;
+const readingLessons = allLessons.filter(l => l.data.type === 'reading' || l.data.type === 'video').length;
+---
+
+<html lang="en">
+  <head>
+    <BaseHead title={`${title} — Course Overview`} description={description} />
+  </head>
+
+  <body>
+    <Header />
+
+    <!-- --c scoped to entire page so all children can use it -->
+    <main style={`--c: ${color ?? '#2563EB'}`}>
+      <!-- ── Hero ── -->
+      <section class="course-hero">
+        <div class="hero-bg-pattern" aria-hidden="true"></div>
+        <div class="hero-glow" aria-hidden="true"></div>
+
+        <div class="container">
+          <nav class="hero-breadcrumb" aria-label="Breadcrumb">
+            <a href={withBase('/courses/')}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+              All Courses
+            </a>
+          </nav>
+
+          <div class="hero-layout">
+            <div class="hero-content">
+              <div class="hero-badges">
+                <span class="level-badge" style={`color: ${levelColor}; background: color-mix(in srgb, ${levelColor} 12%, transparent); border-color: color-mix(in srgb, ${levelColor} 25%, transparent)`}>
+                  {levelLabel}
+                </span>
+                <span class="lang-badge">English</span>
+                <span class="type-badge">Self-paced</span>
+              </div>
+
+              <h1 class="hero-title">{title}</h1>
+              <p class="hero-desc">{description}</p>
+
+              <div class="hero-stats">
+                <div class="stat-box">
+                  <div class="stat-num">{totalLessons}</div>
+                  <div class="stat-lbl">Lessons</div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-box">
+                  <div class="stat-num">{chapters.length}</div>
+                  <div class="stat-lbl">Modules</div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-box">
+                  <div class="stat-num">{totalQuizzes}</div>
+                  <div class="stat-lbl">Quizzes</div>
+                </div>
+                {estimatedHours && (
+                  <>
+                    <div class="stat-divider"></div>
+                    <div class="stat-box">
+                      <div class="stat-num">{estimatedHours}h</div>
+                      <div class="stat-lbl">Estimated</div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div class="hero-actions">
+                <a href={firstLessonHref} class="start-btn" id="start-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  Start Learning
+                </a>
+                <div class="hero-progress-wrap" id="hero-progress" hidden>
+                  <div class="hero-prog-bar">
+                    <div class="hero-prog-fill" style="width:0%"></div>
+                  </div>
+                  <span class="hero-prog-label">0 / {totalLessons} complete</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="hero-visual" aria-hidden="true">
+              <div class="k8s-wheel">
+                <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Outer dashed ring -->
+                  <circle cx="100" cy="100" r="90" stroke="currentColor" stroke-width="4" stroke-dasharray="10 7" opacity=".18"/>
+                  <!-- Inner ring -->
+                  <circle cx="100" cy="100" r="62" stroke="currentColor" stroke-width="2" opacity=".12"/>
+                  <!-- Center hub -->
+                  <circle cx="100" cy="100" r="16" fill="currentColor" opacity=".85"/>
+                  <circle cx="100" cy="100" r="10" fill="white" opacity=".25"/>
+                  <!-- 6 spokes (60° apart) -->
+                  <line x1="100" y1="84" x2="100" y2="14" stroke="currentColor" stroke-width="7" stroke-linecap="round" opacity=".7"/>
+                  <line x1="100" y1="84" x2="100" y2="14" stroke="currentColor" stroke-width="7" stroke-linecap="round" opacity=".7" transform="rotate(60 100 100)"/>
+                  <line x1="100" y1="84" x2="100" y2="14" stroke="currentColor" stroke-width="7" stroke-linecap="round" opacity=".7" transform="rotate(120 100 100)"/>
+                  <line x1="100" y1="84" x2="100" y2="14" stroke="currentColor" stroke-width="7" stroke-linecap="round" opacity=".7" transform="rotate(180 100 100)"/>
+                  <line x1="100" y1="84" x2="100" y2="14" stroke="currentColor" stroke-width="7" stroke-linecap="round" opacity=".7" transform="rotate(240 100 100)"/>
+                  <line x1="100" y1="84" x2="100" y2="14" stroke="currentColor" stroke-width="7" stroke-linecap="round" opacity=".7" transform="rotate(300 100 100)"/>
+                  <!-- 6 pods at spoke tips -->
+                  <rect x="86" y="6" width="28" height="14" rx="4" fill="currentColor" opacity=".7"/>
+                  <rect x="86" y="6" width="28" height="14" rx="4" fill="currentColor" opacity=".7" transform="rotate(60 100 100)"/>
+                  <rect x="86" y="6" width="28" height="14" rx="4" fill="currentColor" opacity=".7" transform="rotate(120 100 100)"/>
+                  <rect x="86" y="6" width="28" height="14" rx="4" fill="currentColor" opacity=".7" transform="rotate(180 100 100)"/>
+                  <rect x="86" y="6" width="28" height="14" rx="4" fill="currentColor" opacity=".7" transform="rotate(240 100 100)"/>
+                  <rect x="86" y="6" width="28" height="14" rx="4" fill="currentColor" opacity=".7" transform="rotate(300 100 100)"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Body ── -->
+      <div class="course-body">
+        <div class="container course-layout">
+
+          <!-- Prerequisites -->
+          {prerequisites.length > 0 && (
+            <section class="prereq-card">
+              <h2 class="card-heading">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                Prerequisites
+              </h2>
+              <ul class="prereq-list">
+                {prerequisites.map(p => (
+                  <li>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <!-- Curriculum -->
+          <section class="curriculum">
+            <div class="curriculum-header">
+              <h2 class="card-heading">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                Course Curriculum
+              </h2>
+              <span class="curriculum-summary">{chapters.length} modules · {totalLessons} lessons</span>
+            </div>
+
+            <div class="chapter-list">
+              {chapters.map((chapter, ci) => (
+                <details class="chapter-item" open={ci === 0}>
+                  <summary class="chapter-summary" style={`--c: ${color ?? '#2563EB'}`}>
+                    <div class="chapter-left">
+                      <span class="chapter-num">{String(chapter.order).padStart(2,'0')}</span>
+                      <span class="chapter-title">{chapter.title}</span>
+                    </div>
+                    <div class="chapter-right">
+                      <span class="chapter-count">{chapter.lessons.length} lessons</span>
+                      <svg class="chapter-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                    </div>
+                  </summary>
+
+                  <ul class="lesson-list">
+                    {chapter.lessons.map(lesson => {
+                      const lp = getLessonPath(lesson);
+                      return (
+                        <li>
+                          <a href={withBase(`/courses/${courseSlug}/${lp}/`)} class="lesson-row">
+                            <span class="lesson-icon-wrap">
+                              <LessonTypeIcon type={lesson.data.type} size={13} />
+                            </span>
+                            <span class="lesson-name">{lesson.data.title}</span>
+                            <span class="lesson-type-pill" data-type={lesson.data.type}>{lesson.data.type}</span>
+                            {lesson.data.duration && (
+                              <span class="lesson-dur">{formatDuration(lesson.data.duration)}</span>
+                            )}
+                          </a>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </details>
+              ))}
+            </div>
+          </section>
+
+          <!-- Tags -->
+          {tags.length > 0 && (
+            <div class="tags-row">
+              <span class="tags-label">Topics</span>
+              {tags.map(tag => <span class="tag-pill">{tag}</span>)}
+            </div>
+          )}
+        </div>
+      </div>
+    </main>
+
+    <Footer />
+  </body>
+</html>
+
+<script define:vars={{ courseSlug, totalLessons }}>
+  const KEY = `course_progress_${courseSlug}`;
+  let progress = {};
+  try { progress = JSON.parse(localStorage.getItem(KEY) ?? '{}'); } catch {}
+  const completed = (progress.completedLessons ?? []).length;
+  const lastVisited = progress.lastVisited;
+
+  if (completed > 0) {
+    const progWrap = document.getElementById('hero-progress');
+    const startBtn = document.getElementById('start-btn');
+    if (progWrap && startBtn) {
+      progWrap.hidden = false;
+      const pct = Math.round(completed / totalLessons * 100);
+      progWrap.querySelector('.hero-prog-fill').style.width = `${pct}%`;
+      progWrap.querySelector('.hero-prog-label').textContent = `${completed} / ${totalLessons} complete`;
+      startBtn.querySelector('svg').outerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>';
+      startBtn.childNodes[startBtn.childNodes.length - 1].textContent = ' Continue';
+    }
+    if (lastVisited) {
+      const parts = lastVisited.split('/');
+      const lp = parts.slice(1).join('/');
+      const base = document.querySelector('meta[name="astro-base"]')?.getAttribute('content') ?? '';
+      document.getElementById('start-btn').href = `${base}/courses/${courseSlug}/${lp}/`;
+    }
+  }
+</script>
+
+<style>
+/* ── Hero ── */
+.course-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 3.5rem 0 3rem;
+  border-bottom: 1px solid var(--bd);
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--c) 12%, var(--bg)) 0%,
+    var(--bg) 65%
+  );
+}
+
+.hero-bg-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(color-mix(in srgb, var(--c) 16%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 70% 100% at 80% 50%, black 0%, transparent 85%);
+  pointer-events: none;
+}
+
+.hero-glow {
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--c) 20%, transparent) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.hero-layout {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 3rem;
+  align-items: center;
+}
+
+.hero-breadcrumb a {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .8125rem;
+  color: var(--fg-3);
+  text-decoration: none;
+  margin-bottom: 1.75rem;
+  transition: color .12s;
+}
+
+.hero-breadcrumb a:hover { color: var(--fg-1); }
+
+.hero-badges {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+  margin-bottom: .875rem;
+}
+
+.level-badge {
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: .3em .8em;
+  border-radius: 99px;
+  border: 1px solid;
+}
+
+.lang-badge, .type-badge {
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  background: var(--bg-2);
+  border: 1px solid var(--bd);
+  padding: .3em .8em;
+  border-radius: 99px;
+}
+
+.hero-title {
+  font-size: clamp(2rem, 4vw, 2.875rem);
+  font-weight: 900;
+  letter-spacing: -.04em;
+  line-height: 1.1;
+  color: var(--fg);
+  margin-bottom: .875rem;
+  max-width: 680px;
+}
+
+.hero-desc {
+  font-size: 1rem;
+  color: var(--fg-2);
+  line-height: 1.7;
+  max-width: 560px;
+  margin-bottom: 1.75rem;
+}
+
+/* Stats */
+.hero-stats {
+  display: flex;
+  align-items: center;
+  gap: .875rem;
+  padding: 1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--bd);
+  border-radius: var(--r-lg);
+  width: fit-content;
+  margin-bottom: 1.75rem;
+  box-shadow: var(--sh-sm);
+}
+
+.stat-box { text-align: center; }
+
+.stat-num {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--fg);
+  letter-spacing: -.03em;
+  line-height: 1;
+}
+
+.stat-lbl {
+  font-size: .6875rem;
+  color: var(--fg-3);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-top: .25rem;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--bd);
+  flex-shrink: 0;
+}
+
+/* Actions */
+.hero-actions { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+
+.start-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .75rem 1.75rem;
+  background: var(--c);
+  color: #fff;
+  border-radius: var(--r-md);
+  font-size: .9375rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity .15s, transform .12s;
+  letter-spacing: -.01em;
+}
+
+.start-btn:hover { opacity: .9; transform: translateY(-1px); color: #fff; }
+
+.hero-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.hero-prog-bar {
+  width: 120px;
+  height: 5px;
+  background: var(--bg-2);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.hero-prog-fill {
+  height: 100%;
+  background: var(--clr-accent);
+  border-radius: 99px;
+  transition: width .5s ease;
+}
+
+.hero-prog-label {
+  font-size: .8125rem;
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+
+/* K8s visual */
+.hero-visual { display: flex; justify-content: center; align-items: center; }
+
+.k8s-wheel {
+  width: 180px;
+  height: 180px;
+  color: var(--c);
+  opacity: .65;
+  animation: wheel-spin 40s linear infinite;
+}
+
+@keyframes wheel-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ── Body ── */
+.course-body { padding: 3rem 0 5rem; }
+
+.course-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 800px;
+}
+
+.card-heading {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -.02em;
+  margin-bottom: 1rem;
+}
+
+.card-heading svg { color: var(--fg-3); }
+
+/* Prerequisites */
+.prereq-card {
+  padding: 1.25rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--bd);
+  border-radius: var(--r-lg);
+}
+
+.prereq-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.prereq-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: .5rem;
+  font-size: .9375rem;
+  color: var(--fg-1);
+}
+
+.prereq-list svg { color: var(--clr-accent); flex-shrink: 0; margin-top: 2px; }
+
+/* Curriculum */
+.curriculum-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.curriculum-summary {
+  font-size: .8125rem;
+  color: var(--fg-3);
+}
+
+/* ── Curriculum accordion ── */
+.chapter-list {
+  display: flex;
+  flex-direction: column;
+  gap: .375rem;
+}
+
+.chapter-item {
+  background: var(--surface);
+  border: 1px solid var(--bd);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+/* open: subtle left accent + border tinted with course color */
+.chapter-item[open] {
+  border-color: var(--bd-1);
+  box-shadow: var(--sh-xs);
+}
+
+.chapter-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .875rem 1.125rem;
+  cursor: pointer;
+  user-select: none;
+  gap: 1rem;
+  background: var(--bg-1);
+  transition: background .12s;
+  outline: none;
+}
+
+.chapter-summary:hover { background: var(--bg-2); }
+.chapter-item[open] > .chapter-summary { background: var(--bg-1); }
+
+.chapter-left {
+  display: flex;
+  align-items: center;
+  gap: .625rem;
+  min-width: 0;
+}
+
+.chapter-num {
+  font-size: .625rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  font-family: ui-monospace, monospace;
+  flex-shrink: 0;
+  background: var(--bg-2);
+  border: 1px solid var(--bd);
+  padding: .2em .55em;
+  border-radius: var(--r-sm);
+}
+
+.chapter-title {
+  font-size: .9375rem;
+  font-weight: 600;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chapter-right {
+  display: flex;
+  align-items: center;
+  gap: .625rem;
+  flex-shrink: 0;
+}
+
+.chapter-count {
+  font-size: .75rem;
+  color: var(--fg-3);
+  background: var(--bg-2);
+  border: 1px solid var(--bd);
+  padding: .15em .55em;
+  border-radius: 99px;
+}
+
+.chapter-chevron {
+  color: var(--fg-3);
+  transition: transform .22s ease;
+  flex-shrink: 0;
+}
+
+.chapter-item[open] .chapter-chevron { transform: rotate(180deg); }
+
+/* Lessons list inside open chapter */
+.lesson-list {
+  list-style: none;
+  padding: .25rem 0;
+  margin: 0;
+  border-top: 1px solid var(--bd);
+  background: var(--surface);
+}
+
+.lesson-row {
+  display: flex;
+  align-items: center;
+  gap: .625rem;
+  padding: .5625rem 1.125rem;
+  font-size: .875rem;
+  color: var(--fg-2);
+  text-decoration: none;
+  transition: background .1s, color .1s;
+  border-left: 2px solid transparent;
+}
+
+.lesson-row:hover {
+  background: var(--bg-1);
+  color: var(--fg);
+  border-left-color: var(--bd-1);
+}
+
+.lesson-icon-wrap { flex-shrink: 0; display: flex; align-items: center; }
+.lesson-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lesson-type-pill {
+  font-size: .625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  padding: .2em .6em;
+  border-radius: 99px;
+  flex-shrink: 0;
+  border: 1px solid;
+}
+
+.lesson-type-pill[data-type="reading"] {
+  color: var(--clr-course);
+  background: color-mix(in srgb, var(--clr-course) 8%, transparent);
+  border-color: color-mix(in srgb, var(--clr-course) 20%, transparent);
+}
+.lesson-type-pill[data-type="video"] {
+  color: var(--clr-video);
+  background: color-mix(in srgb, var(--clr-video) 8%, transparent);
+  border-color: color-mix(in srgb, var(--clr-video) 20%, transparent);
+}
+.lesson-type-pill[data-type="quiz"] {
+  color: var(--clr-quiz);
+  background: color-mix(in srgb, var(--clr-quiz) 8%, transparent);
+  border-color: color-mix(in srgb, var(--clr-quiz) 20%, transparent);
+}
+.lesson-type-pill[data-type="exam"] {
+  color: var(--clr-exam);
+  background: color-mix(in srgb, var(--clr-exam) 8%, transparent);
+  border-color: color-mix(in srgb, var(--clr-exam) 20%, transparent);
+}
+
+.lesson-dur {
+  font-size: .6875rem;
+  color: var(--fg-3);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Tags */
+.tags-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .4rem;
+  padding: 1.5rem;
+  background: var(--bg-1);
+  border: 1px solid var(--bd);
+  border-radius: var(--r-lg);
+}
+
+.tags-label {
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--fg-3);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-right: .25rem;
+}
+
+.tag-pill {
+  font-size: .75rem;
+  background: var(--surface);
+  border: 1px solid var(--bd);
+  color: var(--fg-2);
+  padding: .25em .7em;
+  border-radius: 99px;
+  transition: border-color .12s, color .12s;
+}
+
+.tag-pill:hover { border-color: var(--clr-course); color: var(--clr-course); }
+
+@media (max-width: 768px) {
+  .hero-layout { grid-template-columns: 1fr; }
+  .hero-visual { display: none; }
+  .hero-title { font-size: 2rem; }
+  .hero-stats { gap: .625rem; padding: .75rem 1rem; }
+}
+
+@media (max-width: 600px) {
+  .course-hero { padding: 2rem 0 2rem; }
+  .stat-num { font-size: 1rem; }
+  .hero-stats { flex-wrap: wrap; }
+  .stat-divider { display: none; }
+}
+</style>

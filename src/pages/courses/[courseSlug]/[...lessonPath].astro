@@ -1,0 +1,44 @@
+---
+import { getCollection, render } from 'astro:content';
+import LessonLayout from '../../../layouts/LessonLayout.astro';
+
+export async function getStaticPaths() {
+  const [allCourses, allLessons] = await Promise.all([
+    getCollection('courses', c => c.data.published),
+    getCollection('lessons', l => !l.data.draft),
+  ]);
+
+  const paths = [];
+
+  for (const lesson of allLessons) {
+    const parts = lesson.id.split('/');
+    const courseSlug = parts[0];
+    const lessonPath = parts.slice(1).join('/');
+
+    const course = allCourses.find(c => c.id === courseSlug);
+    if (!course) continue;
+
+    const courseLessons = allLessons
+      .filter(l => l.id.startsWith(`${courseSlug}/`))
+      .sort((a, b) =>
+        a.data.chapterOrder !== b.data.chapterOrder
+          ? a.data.chapterOrder - b.data.chapterOrder
+          : a.data.order - b.data.order,
+      );
+
+    paths.push({
+      params: { courseSlug, lessonPath },
+      props: { lesson, course, allCourseLessons: courseLessons },
+    });
+  }
+
+  return paths;
+}
+
+const { lesson, course, allCourseLessons } = Astro.props;
+const { Content } = await render(lesson);
+---
+
+<LessonLayout lesson={lesson} course={course} allCourseLessons={allCourseLessons}>
+  <Content />
+</LessonLayout>

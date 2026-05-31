@@ -1,0 +1,53 @@
+---
+title: "Quiz: Introduction to Kubernetes"
+description: "Test your understanding of Kubernetes fundamentals, history, and architecture from the first three lessons."
+type: quiz
+duration: 8
+order: 4
+chapterTitle: "Introduction to Kubernetes"
+chapterOrder: 1
+draft: false
+quizData:
+  - question: "What internal Google system directly inspired Kubernetes?"
+    options:
+      - "MapReduce"
+      - "Borg"
+      - "Omega"
+      - "Spanner"
+    correct: 1
+    explanation: "Kubernetes was inspired by Google's internal cluster manager called Borg, which Google had been running at massive scale for over a decade. Kubernetes is essentially an open-source reimagining of Borg's core principles."
+  - question: "Which Control Plane component is the ONLY one that directly reads from and writes to etcd?"
+    options:
+      - "kubelet"
+      - "kube-scheduler"
+      - "kube-apiserver"
+      - "kube-controller-manager"
+    correct: 2
+    explanation: "The API Server (kube-apiserver) is the only Kubernetes component that communicates directly with etcd. All other components interact with cluster state by making API calls to the API Server — never to etcd directly."
+  - question: "What is the primary responsibility of the kube-scheduler?"
+    options:
+      - "Restarting failed containers on worker nodes"
+      - "Watching for unscheduled Pods and selecting the best node to run each one"
+      - "Managing the lifecycle of Deployments and ReplicaSets"
+      - "Exposing the Kubernetes REST API"
+    correct: 1
+    explanation: "The kube-scheduler watches for newly created Pods that haven't been assigned to a node yet. For each Pod, it filters out unsuitable nodes (insufficient resources, taint mismatches), scores the remaining ones, and binds the Pod to the highest-scoring node."
+  - question: "In the Pod scheduling flow, which component starts the container after a Pod is scheduled to a node?"
+    options:
+      - "kube-proxy"
+      - "kube-controller-manager"
+      - "kube-apiserver"
+      - "kubelet"
+    correct: 3
+    explanation: "The kubelet is an agent running on every worker node. Once the scheduler binds a Pod to a node, the kubelet on that node watches the API Server, notices the Pod assignment, pulls the container image, and starts the container via the container runtime."
+  - question: "What does '8' represent in the abbreviation 'K8s'?"
+    options:
+      - "Kubernetes version 8"
+      - "The 8 letters 'ubernete' between 'K' and 's' in 'Kubernetes'"
+      - "The internal Google project number"
+      - "The number of core control plane components"
+    correct: 1
+    explanation: "K8s is a numeronym — an abbreviation where the digit '8' represents the 8 characters 'ubernete' between the first letter 'K' and the last letter 's' in 'Kubernetes'. Similar abbreviations: i18n (internationalization), a11y (accessibility)."
+---
+
+Good work completing the Introduction module! Take this quiz to solidify your understanding of Kubernetes fundamentals before moving on to the Core Architecture deep dive.
