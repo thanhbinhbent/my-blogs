@@ -2,7 +2,7 @@ export const SITE_TITLE = "I am Binh Tran";
 export const SITE_BRAND = "Binh Tran";
 export const SITE_DESCRIPTION =
   "Engineering notes on web development, AI, and testing automation.";
-export const SITE_URL = "https://blogs.binh.app";
+export const SITE_URL = "https://binh.app";
 export const AUTHOR = "Binh Tran";
 export const AUTHOR_ROLE = "Software Engineer";
 export const GITHUB_USERNAME = "thanhbinhbent";
@@ -15,4 +15,4 @@ export const GISCUS_CATEGORY = "Q&A";
 export const GISCUS_CATEGORY_ID = "DIC_kwDOSmNZ684C90In";
 
 // Plausible Analytics
-export const PLAUSIBLE_DOMAIN = "blogs.binh.app";
+export const PLAUSIBLE_DOMAIN = "binh.app";
